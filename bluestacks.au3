@@ -8,6 +8,8 @@
 
 HotKeySet("{end}", "end")
 HotKeySet("{insert}", WriteColorCheck)
+HotKeySet("{home}", PuriCircle)
+;might need fn key
 
 $window = "BlueStacks"
 $globalOffsetX = 1
@@ -18,9 +20,12 @@ $writeColorCheckDelay = 200
 
 $maxRetry = 20000
 $maxScriptTime = 3000 * 60 * 1000
-$clearStoryMode = 0
+$clearStoryMode = 1
 $coopMode = 0
-$farmExp = 1
+$farmExp = 0
+;0 if don't want auto 1 if do
+;clear story mode for click next or try again farm xp 5-1
+;clear story mode is when you want it to click screen in unknown situation
 
 Func end()
    Exit
@@ -37,31 +42,40 @@ EndFunc
 $expectedMouseX = 0
 $expectedMouseY = 0
 
+Func MoveMouseExact($x, $y)
+
+    $x = $x * 65535 / @DesktopWidth
+    $y = $y * 65535 / @DesktopHeight
+
+    DllCall($User32, "none", "mouse_event", "int", 32769, "int", $x, "int", $y, "int", 0, "int", 0) ; 32769 0x8001 BitOR($MOUSEEVENTF_ABSOLUTE, $MOUSEEVENTF_MOVE)
+ EndFunc
+
 Func MoveMouse($x, $y, $var, $steps)
-   Local $x2 = $globalOffsetX + $x + Round(Random(-1, 1) * $var)
-   Local $y2 = $globalOffsetY + $y + Round(Random(-1, 1) * $var)
+   $x = $x + Random(-1 * $var, $var, 1)
+   $y = $y + Random(-1 * $var, $var, 1)
 
-   $expectedMouseX = $x2
-   $expectedMouseY = $y2
-EndFunc
+   Local $x2 = $x + $globalOffsetX
+   Local $y2 = $y + $globalOffsetY
 
-Func MouseAction($upDown)
-   Local $x = $expectedMouseX - $globalOffsetX
-   Local $y = $expectedMouseY - $globalOffsetY
-   Local $wParam = 0
-   Local $lParam = BitRotate($y,16,"D")
-   $lParam = BitXOR($lParam,$x)
-
-   If $upDown = "Up" Then
-	  _SendMessage($controlHandle, $WM_LBUTTONUP, $wParam, $lParam)
-   ElseIf $upDown = "Down" Then
-	  _SendMessage($controlHandle, $WM_LBUTTONDOWN, $wParam, $lParam)
-   Else
-	  Write("wat")
+   If $steps <= 1 Then
+	  MoveMouseExact($x2, $y2)
+	  Return
    EndIf
-   If @error Then
-	  Write("Mouse failed: " & @error)
-   EndIf
+
+   Local $mx = MouseGetPos(0)
+   Local $my = MouseGetPos(1)
+
+   Local $dx = ($x2 - $mx) / $steps
+   Local $dy = ($y2 - $my) / $steps
+
+   Local $i = 0
+
+   While $i < $steps
+	  MoveMouseExact($x2 - ($dx * ($steps - $i - 1)), $y2 - ($dy * ($steps - $i - 1)))
+	  $i = $i + 1
+   WEnd
+
+   MoveMouseExact($x2, $y2)
 EndFunc
 
 $User32 = DllOpen("User32.dll")
@@ -181,8 +195,94 @@ Func WriteColorCheck()
 
 	  Local $v = _Max(_Max($vr, $vg), $vb)
 
-	  Send("PixelCheck("&$x&", "&$y&", 0x"&Hex($r,2)&Hex($g,2)&Hex($b,2)&", "&($v+10)&")")
+	  Write("PixelCheck("&$x&", "&$y&", 0x"&Hex($r,2)&Hex($g,2)&Hex($b,2)&", "&($v+10)&")")
    EndIf
+EndFunc
+
+Func IsPuriSkillActive()
+   If PixelCheck(244, 580, 0x3F3623, 10) Then
+	  If PixelCheck(216, 573, 0xFFA73A, 30) AND PixelCheck(300, 572, 0xFFA430, 30) Then
+		 ;more samples to see how tolerant should be
+		 Return 1
+	  EndIf
+   EndIf
+    Return 0
+EndFunc
+Func IsPuriExitButton()
+   If PixelCheck(305, 931, 0x8C2910, 10) AND PixelCheck(359, 926, 0x2B2315, 10) Then
+	  Return 1
+   EndIf
+   If PixelCheck(316, 917, 0x220D08, 10) AND PixelCheck(373, 920, 0x080603, 10) Then
+	  Return 1
+   EndIf
+   Return 0
+EndFunc
+Func PuriCircle()
+   Local $var = 5
+
+   Local $positions = 24
+   Local $xArray[$positions] = [369,402,405,410,405,399,383,377,331,284,245,191,160,124,115,99,102,116,146,176,206,268,301,338]
+   Local $yArray[$positions] = [452,489,528,564,609,651,717,767,751,735,726,701,686,674,633,570,542,505,438,410,397,387,385,415]
+;24 puri positions. you can get them by insert x,y,color,tolerance
+
+   Click($xArray[$positions - 1], $yArray[$positions - 1], $var)
+   Sleep(500)
+
+   Write("Starting purify")
+
+   While True
+      MoveMouse($xArray[$positions - 1], $yArray[$positions - 1], $var, 1) ; Start
+      MouseDown("left")
+
+      Local $i = $positions * 1000 - 2
+      While True
+         Local $x =$xArray[Mod($i, $positions)]
+         Local $y =$yArray[Mod($i, $positions)]
+         MoveMouse($x, $y, $var, 5)
+
+		 If IsPuriSkillActive() Then
+			MouseUp("left")
+
+			Write("Special skill")
+
+			Local $minimumClicks = 3
+			While $minimumClicks > 0
+			   If Not IsPuriSkillActive() Then
+				  $minimumClicks = $minimumClicks - 1
+			   EndIf
+			   If IsPuriExitButton() Then
+				  ExitLoop
+			   EndIf
+
+			   MoveMouse(258, 556, 8, 0)
+			   Click(258, 556, 8)
+			WEnd
+
+			Sleep(100)
+			ExitLoop
+		 EndIf
+
+         If IsPuriExitButton() Then
+            ExitLoop
+         EndIf
+
+         $i = $i - 1
+      WEnd
+
+      If IsPuriExitButton() Then
+         ExitLoop
+      EndIf
+   WEnd
+
+   Write("Exit button detected")
+   Sleep(1000)
+
+   While IsPuriExitButton()
+	  Click(261, 922, 10)
+      Sleep(1000)
+   WEnd
+
+   Write("Purify complete")
 EndFunc
 
 ; *******************************************************
@@ -271,6 +371,15 @@ While 1
 		 ContinueLoop
 	  EndIf
 
+	  If PixelCheck(73, 905, 0x393029, 10) Then
+		 Write("Next Button Detected")
+		 If $clearStoryMode Then
+			Click(73, 905, 10)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+	  EndIf
+
 	  Write("Drop Rewards")
 	  ContinueLoop
    EndIf
@@ -341,18 +450,24 @@ While 1
 		 ContinueLoop
 	  EndIf
 
+	  If PixelCheck(228, 438, 0xB8B2A7, 10) AND PixelCheck(283, 435, 0x1F1E1C, 10) Then
+		 Write("Start purifying?")
+		 AlertProblem()
+		 ContinueLoop
+	  EndIf
+
 	  Write("White Red button")
 	  ContinueLoop
    EndIf
 
    Write("Unknown situation")
    If $clearStoryMode = 1 Then
-	  If PixelCheck(440, 180, 0x5B5039, 11) AND PixelCheck(463, 186, 0xDCD0C2, 11) Then
-		 Click(491, 185, 5)
-		 Sleep(500)
-	  EndIf
+	  ;If PixelCheck(440, 180, 0x5B5039, 11) AND PixelCheck(463, 186, 0xDCD0C2, 11) Then
+		 ;Click(491, 185, 5)
+		 ;Sleep(500)
+	  ;EndIf
 	  If Random(0, 99) < 50 Then
-		 Click(511, 958, 13)
+		 Click(279, 514, 13)
 		 Sleep(Random(1, 500, 1))
 	  EndIf
    EndIf
