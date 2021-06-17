@@ -1,18 +1,19 @@
-#include <ScreenCapture.au3>
-#Include <Date.au3>
-#include <Math.au3>
-#include <SendMessage.au3>
-#include <WindowsConstants.au3>
-#include <WinAPISysWin.au3>
+#include "common.au3"
 
-; Controls / Emergency off button
+; Controls
 HotKeySet("{end}", "end")
 HotKeySet("{insert}", WriteColorCheck)
 HotKeySet("{home}", PuriCircle)
 
-; This is for Bluestacks
+; This is for Bluestacks v5
 ; 540x960 portrait resolution
 ; 160 DPI
+; 60 FPS
+; DirectX Compatibility
+; Sidebar closed
+; Controls hidden
+
+; Make sure to set in-game quality to High
 
 ; 0 means "no" or "off"
 ; 1 means "on" or "yes"
@@ -20,120 +21,26 @@ HotKeySet("{home}", PuriCircle)
 $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 
-$clearStoryMode = 1               ; For clearing new content with a Next button
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
+$clearStoryMode = 1               ; For clearing new content with a Next button
+
+
+; More internalish things
+$maxTimeout = 150
+$maxBattleTimeout = 1500
+$writeColorCheckDelay = 20
+
+$globalOffsetX = 10
+$globalOffsetY = 10
+
+$timeout = 0
+$battleTimeout = 0
+
+; Super internaly things
 
 Func Test()
    Write("Testing")
-   Click(50, 443, 0)
-EndFunc
-
-; -------------------------------------------------------------------------------
-; -------------------------------------------------------------------------------
-; -------------------------------------------------------------------------------
-
-Func end()
-   Exit
-EndFunc
-
-$user32 = DllOpen("User32.dll")
-Func _PostMessage($a, $b, $c)
-   _SendMessage($sendMessageHandle, $a, $b, $c)
-   ;DllCall($user32, "int", "PostMessage", "hwnd", $sendMessageHandle, "int", $a, "int", $b, "long", $c)
-EndFunc
-
-$mouseIsDown = False
-$mouseX = 0
-$mouseY = 0
-Func MoveMouse($x, $y, $var)
-   $x = $x + Random(-1 * $var, $var, 1)
-   $y = $y + Random(-1 * $var, $var, 1)
-
-   $mouseX = $x - 2
-   $mouseY = $y - 44
-
-   Local $param = 0
-   If $mouseIsDown Then
-	  $param = 1
-   EndIf
-
-   _PostMessage($WM_MOUSEMOVE, $param, _WinAPI_MakeLong($x, $y))
-EndFunc
-
-Func Click($x, $y, $var)
-   MoveMouse($x, $y, $var)
-
-   HoldMouse(True)
-   HoldMouse(False)
-EndFunc
-
-Func HoldMouse($down)
-   ; bool only bro
-   If $down Then
-	  $down = True
-   Else
-	  $down = False
-   EndIf
-
-   If $mouseIsDown = $down Then
-	  Return
-   EndIf
-
-   $mouseIsDown = $down
-
-   If $down Then
-	  _PostMessage($WM_LBUTTONDOWN, 0, _WinAPI_MakeLong($mouseX, $mouseY))
-   Else
-	  _PostMessage($WM_LBUTTONUP, 0, _WinAPI_MakeLong($mouseX, $mouseY))
-   EndIf
-EndFunc
-
-$startTime = TimerInit()
-Func GetElapsedTime()
-   Return TimerDiff($startTime)
-EndFunc
-
-Func CompareColors($c1, $c2, $tol)
-   $r = BitShift(BitAND($c1, 0xFF0000), 16)
-   $g = BitShift(BitAND($c1, 0xFF00), 8)
-   $b = BitAND($c1, 0xFF)
-
-   $r2 = BitShift(BitAND($c2, 0xFF0000), 16)
-   $g2 = BitShift(BitAND($c2, 0xFF00), 8)
-   $b2 = BitAND($c2, 0xFF)
-
-   If Abs($r - $r2) > $tol Then
-	  return False
-   EndIf
-
-   If Abs($g - $g2) > $tol Then
-	  return False
-   EndIf
-
-   If Abs($b - $b2) > $tol Then
-	  return False
-   EndIf
-
-   return True
-EndFunc
-
-Func PixelCheck($x, $y, $rgb, $tol)
-   $c = PixelGetColor($x + $globalOffsetX, $y + $globalOffsetY)
-
-   return CompareColors($c, $rgb, $tol)
-EndFunc
-
-Func AlertProblem()
-   SoundPlay(@WindowsDir & "\media\tada.wav", 1)
-   Sleep(5000)
-EndFunc
-
-Func Write($str)
-   ConsoleWrite("[" & _NowTime() & "] " & $str & @CRLF)
-EndFunc
-
-Func GetSeconds()
-   Return (_DateDiff("s","1970/01/01 00:00:00",@YEAR & "/" & @MON & "/" & @MDAY & " " & @HOUR & ":" & @MIN & ":" & @SEC))
+   Click(175, 699, 0)
 EndFunc
 
 Func WriteColorCheck()
@@ -188,7 +95,9 @@ Func WriteColorCheck()
 
 	  Local $v = _Max(_Max($vr, $vg), $vb)
 
-	  Write("PixelCheck("&$x&", "&$y&", 0x"&Hex($r,2)&Hex($g,2)&Hex($b,2)&", "&($v+10)&")")
+	  Local $str = "PixelCheck("&$x&", "&$y&", 0x"&Hex($r,2)&Hex($g,2)&Hex($b,2)&", "&($v+10)&")"
+	  Write($str)
+	  ClipPut($str)
    EndIf
 EndFunc
 
@@ -196,7 +105,7 @@ EndFunc
 ; -------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------
 
-Func ResetBattleStats()
+Func OnStoryStart()
    $battleTimeout = 0
 EndFunc
 
@@ -212,19 +121,13 @@ $_IsPuriSkillActive_Response = 0
 $_IsPuriSkillActive_Time = 0
 Func IsPuriSkillActive()
    Local $nowTime = GetElapsedTime()
-   If $nowTime - $_IsPuriSkillActive_Time < 250 Then
+   If $nowTime - $_IsPuriSkillActive_Time < 1 Then
 	  Return $_IsPuriSkillActive_Response
    EndIf
 
    $_IsPuriSkillActive_Response = 0
 
-   If PixelCheck(244, 580, 0x3F3623, 10) Then
-	  If PixelCheck(216, 573, 0xFFA73A, 30) AND PixelCheck(300, 572, 0xFFA430, 30) Then
-		 ;more samples to see how tolerant should be
-		 $_IsPuriSkillActive_Response = 1
-	  EndIf
-   EndIf
-   If PixelCheck(324, 573, 0xF58E3B, 32) AND PixelCheck(205, 573, 0xFF9236, 28) Then
+   If (PixelCheck(197, 528, 0xFF8E2A, 45) OR PixelCheck(193, 530, 0xF3934B, 37) OR PixelCheck(190, 529, 0xFF8C30, 30) OR PixelCheck(192, 529, 0xFF8834, 34)) AND (PixelCheck(298, 529, 0xFD7F2A, 25) OR PixelCheck(304, 529, 0xF98C41, 30) OR PixelCheck(301, 528, 0xFA933F, 21) OR PixelCheck(298, 528, 0xFE8D37, 24)) Then
 	  $_IsPuriSkillActive_Response = 1
    EndIf
 
@@ -236,18 +139,18 @@ $_IsPuriExitButton_Response = 0
 $_IsPuriExitButton_Time = 0
 Func IsPuriExitButton()
    Local $nowTime = GetElapsedTime()
-   If $nowTime - $_IsPuriExitButton_Time < 250 Then
+   If $nowTime - $_IsPuriExitButton_Time < 1000 Then
 	  Return $_IsPuriExitButton_Response
    EndIf
 
    $_IsPuriExitButton_Response = 0
    ; Standard OK button
-   If PixelCheck(167, 920, 0x2B2314, 10) AND PixelCheck(201, 920, 0xA03D25, 10) AND PixelCheck(357, 920, 0x2F2718, 10) Then
+   If PixelCheck(154, 857, 0x2A2212, 10) AND PixelCheck(199, 855, 0x9B3820, 10) AND PixelCheck(328, 853, 0x2A2118, 10) Then
 	  $_IsPuriExitButton_Response = 1
    EndIf
 
    ; Darkened OK button from Rank Up
-   If PixelCheck(163, 920, 0x0A0804, 10) AND PixelCheck(207, 919, 0x210C07, 10) AND PixelCheck(363, 916, 0x0B0905, 10) Then
+   If PixelCheck(157, 855, 0x090704, 10) AND PixelCheck(186, 849, 0x230E08, 10) AND PixelCheck(332, 851, 0x0B0905, 10) Then
 	  $_IsPuriExitButton_Response = 1
    EndIf
 
@@ -258,20 +161,55 @@ EndFunc
 Func PuriCircle()
    Local $var = 5
 
-   Local $positions = 24
-   Local $xArray[$positions] = [369,402,405,410,405,399,383,377,331,284,245,191,160,124,115,99,102,116,146,176,206,268,301,338]
-   Local $yArray[$positions] = [452,489,528,564,609,651,717,767,751,735,726,701,686,674,633,570,542,505,438,410,397,387,385,415]
+   ; The dead center locations of each puri victim
+   Local $realPositions[16] = [374, 473, 383, 591, 352, 729, 228, 716, 110, 646, 93,  510, 160, 393, 287, 378]
+
+   ; Build 5 points between each real point
+   Local $positionMultiplier = 1
+   Local $positions[$positionMultiplier*16]
+
+   Local $i = 0
+   While $i < 16
+	  Local $a = 0
+	  While $a < $positionMultiplier
+		 Local $positionOffset = ($i*$positionMultiplier)+(2*$a)
+
+		 Local $realX = $realPositions[$i+0]
+		 Local $realY = $realPositions[$i+1]
+
+		 Local $nextX = $realPositions[Mod($i+2,16)]
+		 Local $nextY = $realPositions[Mod($i+3,16)]
+
+		 Local $dx = Round(($nextX - $realX) * $a / $positionMultiplier)
+		 Local $dy = Round(($nextY - $realY) * $a / $positionMultiplier)
+
+		 $positions[$positionOffset+0] = $realX + $dx
+		 $positions[$positionOffset+1] = $realY + $dy
+
+		 ;Write("$positions[" & ($positionOffset/2) & "] = (" & $positions[$positionOffset+0] & ", " & $positions[$positionOffset+1] & ") comes from ("&$realX & ","&$realY&")->("&$nextX&","&$nextY&") step " & $a)
+
+		 $a = $a + 1
+	  WEnd
+
+	  $i = $i + 2
+   WEnd
 
    Write("Starting purify")
 
+   ; It's basically impossible for there to be an exit
+   ; after less than 35s
+   $_IsPuriExitButton_Response = 0
+   $_IsPuriExitButton_Time = GetElapsedTime() + 35000
+
    While True
-      MoveMouse($xArray[0], $yArray[0], $var) ; Start
+      MoveMouse($positions[0], $positions[1], $var) ; Start
       HoldMouse(True)
 
       Local $i = 0
+	  Local $expectedTime = GetElapsedTime()
       While True
-         Local $x = $xArray[Mod($i, $positions)]
-         Local $y = $yArray[Mod($i, $positions)]
+         Local $x = $positions[$i]
+         Local $y = $positions[$i+1]
          MoveMouse($x, $y, $var)
 
 		 If IsPuriSkillActive() Then
@@ -287,13 +225,11 @@ Func PuriCircle()
 			   If IsPuriExitButton() Then
 				  ExitLoop
 			   EndIf
-
-			   Click(258, 556, 8)
+			   Click(241, 522, 8)
+			   Sleep(50)
 			WEnd
 
 			Write("Special Skill Done")
-
-			Sleep(100)
 			ExitLoop
 		 EndIf
 
@@ -301,9 +237,7 @@ Func PuriCircle()
             ExitLoop
          EndIf
 
-         $i = $i + 1
-
-		 Sleep(20)
+         $i = Mod($i + 2, 16*$positionMultiplier)
       WEnd
 
       If IsPuriExitButton() Then
@@ -318,7 +252,7 @@ Func PuriCircle()
    ; This is due to animations being annoying
    While IsPuriExitButton()
 	  While IsPuriExitButton()
-		 Click(261, 922, 10)
+		 Click(244, 855, 10)
 		 Sleep(1000)
 	  WEnd
 	  Sleep(2000)
@@ -331,43 +265,67 @@ EndFunc
 ; -------------------------------------------------------------------------------
 ; -------------------------------------------------------------------------------
 
-$maxTimeout = 150
-$maxBattleTimeout = 1500
-$writeColorCheckDelay = 200
-
-$globalOffsetX = 1
-$globalOffsetY = 1
-
 $windowHandle = 0
-$sendMessageHandle = 0
 
 Init()
 Func Init()
    Write("Please focus the bluestacks window...")
    $windowHandle = WinWaitActive("BlueStacks")
-   WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 584, 971)
 
-   Write("Window found...")
+   Write("Window found " & $windowHandle & " - retrieving children")
 
    Local $children = _WinAPI_EnumChildWindows($windowHandle)
    If @error <> 0 Then
-	  Write("Failed to get children: " & @error)
-	  Return
+	  Local $realHandle = _WinAPI_GetParent($windowHandle)
+	  If @error <> 0 Then
+		 Write("Failed secondary lookup: " & @error)
+		 Exit
+	  EndIf
+	  Write("Window found " & $realHandle & " retrieving children")
+
+	  $windowHandle = $realHandle
+	  $children = _WinAPI_EnumChildWindows($windowHandle)
+	  If @error <> 0 Then
+		 Write("Failed secondary child lookup: " & @error)
+		 Exit
+	  EndIf
+
+	  $globalOffsetX2 = 0
+	  $globalOffsetY2 = -32
+   Else
+	  $globalOffsetX2 = -2
+	  $globalOffsetY2 = -44
+	  Write("Warning: This might not work. Are you using BlueStacks 4? This is made for 5")
    EndIf
+
+   ; Note, window actually becomes 488,899 and I give up on figuring out what to do
+   ; Main this is consistency and it seems to be consistent
+   WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
+   Sleep(50)
+   WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
+
    Write("Array count: " & $children[0][0])
    Local $i = 1
+   Local $correctIndex = 0
    While $i <= $children[0][0]
 	  Write("[" & $i & "][0] = " & $children[$i][0])
 	  Write("[" & $i & "][1] = " & $children[$i][1])
+
+	  If $children[$i][1] = "plrNativeInputWindowClass" Then
+		 $correctIndex = $i
+	  EndIf
+
 	  $i = $i + 1
    WEnd
-   $sendMessageHandle = $children[1][0]
+   If $correctIndex = 0 Then
+	  Write("Unable to find plrNativeInputWindowClass")
+	  Exit
+   EndIf
+   ; Expectation:
+   $sendMessageHandle = $children[$correctIndex][0]
 
-   Write("Window locked")
+   Write("Window hooked")
 EndFunc
-
-$timeout = 0
-$battleTimeout = 0
 
 While 1
    If GetElapsedTime() > $maxScriptTime Then
@@ -389,7 +347,7 @@ While 1
 	 ContinueLoop
    EndIf
 
-   If PixelCheck(41, 922, 0x5E5239, 10) AND PixelCheck(183, 935, 0xF0E8DF, 10) AND PixelCheck(320, 939, 0xE9E0D8, 10) Then
+   If PixelCheck(67, 703, 0xB48666, 10) AND PixelCheck(440, 857, 0x735231, 10) Then
 	  Write("In battle")
 
 	  OnBattleTick()
@@ -400,16 +358,16 @@ While 1
 		 AlertProblem()
 	  EndIf
 
-	  If PixelCheck(360, 954, 0x4A2919, 10) Then
+	  If PixelCheck(355, 885, 0x4F2E1E, 10) Then
 		 ; Manual clicking
 		 If Random(0, 100) < 50 Then
-			Click(71, 856, 5)
+			Click(67, 794, 10)
 		 Else
-			Click(188, 856, 5)
+			Click(154, 792, 10)
 		 EndIf
-	  ElseIf PixelCheck(357, 952, 0x754B32, 10) Then
+	  ElseIf PixelCheck(358, 884, 0x935941, 10) Then
 		 Write("Disabling Auto Mode")
-		 Click(381, 940, 5)
+		 Click(355, 871, 5)
 		 Sleep(1000)
 	  Else
 		 Write("Unknown Auto Status")
@@ -421,8 +379,8 @@ While 1
 
    Sleep(Random(500, 1000, 1))
 
-   If PixelCheck(160, 909, 0xDCCCC3, 10) AND PixelCheck(313, 903, 0x8D3B1A, 10) AND PixelCheck(25, 421, 0x786856, 10) Then
-	  If PixelCheck(51, 909, 0x6F645D, 10) OR PixelCheck(50, 910, 0x635851, 10) Then
+   If PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10) Then
+	  If PixelCheck(148, 844, 0xDCCCC3, 10) AND PixelCheck(46, 843, 0x443C35, 10) Then
 		 If $clearStoryMode Then
 			Write("Done with story")
 			AlertProblem()
@@ -430,16 +388,17 @@ While 1
 		 EndIf
 
 		 Write("Try Again")
-		 Click(93, 910, 10)
-		 ResetBattleStats()
+		 Click(86, 845, 10)
+		 OnStoryStart()
 		 Sleep(2000)
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(73, 905, 0x393029, 10) OR (PixelCheck(76, 911, 0xC7BCB6, 10)) Then
+	  If PixelCheck(148, 844, 0xDCCCC3, 10) AND PixelCheck(72, 845, 0x5C524B, 10) Then
 		 Write("Next Button Detected")
 		 If $clearStoryMode Then
-			Click(73, 905, 10)
+			Click(86, 845, 10)
+			OnStoryStart()
 			Sleep(1000)
 			ContinueLoop
 		 EndIf
@@ -449,58 +408,37 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(508, 936, 0x403828, 10) AND PixelCheck(509, 925, 0x716140, 10) AND PixelCheck(518, 901, 0x251304, 10) Then
-	  If Not PixelCheck(115, 887, 0xE9CF96, 10) Then
+   If PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10) Then
+	  If Not PixelCheck(102, 823, 0xE5D49A, 10) Then
 		 Write("Clicking on Story")
-		 Click(116, 921, 10)
+		 Click(104, 858, 10)
 		 Sleep(2000)
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(304, 191, 0x864B1F, 10) AND PixelCheck(350, 746, 0xD2C2A9, 10) AND PixelCheck(346, 835, 0x596949, 10) Then
-		 Write("Act of Reality - Hard")
-		 Click(266, 748, 10) ; Ch. 5
-		 Sleep(2000)
+	  If PixelCheck(57, 769, 0x604F3F, 10) AND PixelCheck(190, 766, 0x892E15, 10) Then
+		 If PixelCheck(436, 752, 0x463D2D, 10) Then
+			Write("Start Story - Skip ticket disabled")
+			Click(245, 767, 10)
+			OnStoryStart()
+			Sleep(3000)
+			ContinueLoop
+		 EndIf
+
+		 Write("Unknown Start Story")
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(127, 401, 0x082E32, 10) AND PixelCheck(105, 502, 0xFFFFFF, 10) AND PixelCheck(129, 703, 0x26D25C, 10) Then
-		 Write("Chapter 5-1")
-		 Click(267, 382, 10)
-		 Sleep(2000)
-		 ContinueLoop
-	  EndIf
-
-	  If PixelCheck(298, 826, 0x8C3118, 10) AND PixelCheck(465, 811, 0x8C7B5A, 10) AND PixelCheck(437, 832, 0x453921, 10) Then
-		 Write("Start Story - Skip ticket visible")
-		 Click(261, 830, 10)
-		 ResetBattleStats()
-		 Sleep(3000)
-		 ContinueLoop
-	  EndIf
-
-	  If PixelCheck(202, 826, 0x8D3219, 10) AND PixelCheck(468, 812, 0x453D30, 10) Then
-		 Write("Start Story - Skip ticket disabled")
-		 Click(264, 827, 10)
-		 ResetBattleStats()
-		 Sleep(3000)
-		 ContinueLoop
-	  EndIf
-
-	  Write("Home Story Gear Menu Visible")
+	  Write("Main buttons visible")
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(84, 901, 0x242211, 10) AND PixelCheck(227, 902, 0xDCCDC4, 10) AND PixelCheck(261, 902, 0x2D2416, 10) AND PixelCheck(293, 906, 0x842910, 10) Then
-	  If PixelCheck(367, 404, 0x060606, 10) AND PixelCheck(200, 403, 0xABA69B, 10) Then
+   If PixelCheck(220, 840, 0xD8CDC0, 10) AND PixelCheck(241, 838, 0x2F2716, 10) AND PixelCheck(268, 838, 0x8E331A, 10) Then
+	  If PixelCheck(177, 370, 0xD5CDC1, 10) AND PixelCheck(164, 367, 0x060606, 10) Then
 		 Write("Start purifying?")
-		 AlertProblem()
-		 ContinueLoop
-	  EndIf
-
-	  If PixelCheck(228, 438, 0xB8B2A7, 10) AND PixelCheck(283, 435, 0x1F1E1C, 10) Then
-		 Write("Start purifying?")
-		 AlertProblem()
+		 Click(324, 841, 10) ; OK
+		 Sleep(5000)
+		 PuriCircle()
 		 ContinueLoop
 	  EndIf
 
@@ -508,52 +446,9 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(163, 907, 0x292114, 10) AND PixelCheck(203, 911, 0xD6C6BD, 10) AND PixelCheck(365, 907, 0x2A2211, 10) Then
-	  If PixelCheck(354, 289, 0xC6B3AB, 10) AND PixelCheck(451, 408, 0xD4C4BA, 10) AND PixelCheck(451, 504, 0xD7C7B8, 10) Then
-		 Write("Recover AP - Insufficient AP to continue the story")
-		 Click(256, 410, 10)
-		 Sleep(2000)
-		 ContinueLoop
-	  EndIf
-
-	  If PixelCheck(263, 66, 0xDBCBBA, 10) AND PixelCheck(43, 641, 0x817C74, 10) Then
-		 Write("Royal Pass")
-		 Click(262, 907, 10)
-		 Sleep(1000)
-		 ContinueLoop
-	  EndIf
-
-	  Write("White Button")
-	  ContinueLoop
-   EndIf
-
-   If PixelCheck(173, 913, 0x2C241B, 10) AND PixelCheck(196, 911, 0x8B3018, 10) AND PixelCheck(353, 909, 0x2A2215, 10) Then
-	  If PixelCheck(168, 326, 0xF1E1CB, 10) AND PixelCheck(269, 327, 0xEFDDC6, 10) Then
-		 Write("Login Bonus")
-		 Click(262, 914, 10)
-		 Sleep(500)
-		 ContinueLoop
-	  EndIf
-	  If PixelCheck(160, 114, 0xF6EEDD, 10) AND PixelCheck(270, 114, 0xE4CFBA, 10) Then
-		 Write("Login Bonus 2")
-		 Click(262, 914, 10)
-		 Sleep(500)
-		 ContinueLoop
-	  EndIf
-	  If PixelCheck(133, 432, 0x060606, 10) AND PixelCheck(393, 430, 0x060606, 10) Then
-		 Write("Black warning message")
-		 Click(262, 914, 10)
-		 Sleep(2000)
-		 ContinueLoop
-	  EndIf
-
-	  Write("Red Button")
-	  ContinueLoop
-   EndIf
-
    Write("Unknown situation")
    If $clearStoryMode = 1 Then
-	  Click(279, 514, 13)
+	  Click(425, 718, 10)
 	  Sleep(Random(1, 500, 1))
    EndIf
    Sleep(Random(1000, 1300, 1))
