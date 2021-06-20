@@ -22,19 +22,29 @@ $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
-$clearStoryMode = 1               ; For clearing new content with a Next button
+$clearStoryMode = 0               ; For clearing new content with a Next button
+$coopMode = 1					  ; For clearing things in coop
 
+$crystalRefresh = 0               ; Use twilight crystals to refresh
+$puriRefresh = 1                  ; Use purification to refresh
+$puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
 $maxTimeout = 150
 $maxBattleTimeout = 1500
-$writeColorCheckDelay = 20
+$writeColorCheckDelay = 500
 
 $globalOffsetX = 10
 $globalOffsetY = 10
 
 $timeout = 0
 $battleTimeout = 0
+
+; Functions that change frequently
+
+Func IsCoopBattleGood()
+   Return True
+EndFunc
 
 ; Super internaly things
 
@@ -46,44 +56,37 @@ EndFunc
 Func WriteColorCheck()
    $x = MouseGetPos(0) - $globalOffsetX
    $y = MouseGetPos(1) - $globalOffsetY
-   $c = PixelGetColor($x + $globalOffsetX, $y + $globalOffsetY)
 
-   ;Send("PixelCheck("&$x&", "&$y&", 0x"&Hex($c,6)&", 10)")
-   ;Send("Click("&$x&", "&$y&", 10)")
+   Local $i
+   Local $c1
+   Local $r
+   Local $g
+   Local $b
 
-   If True Then
-	  Local $i
-	  Local $c1
-	  Local $r
-	  Local $g
-	  Local $b
+   Local $minr = 255
+   Local $ming = 255
+   Local $minb = 255
 
-	  Local $minr = 255
-	  Local $ming = 255
-	  Local $minb = 255
+   Local $maxr = 0
+   Local $maxg = 0
+   Local $maxb = 0
 
-	  Local $maxr = 0
-	  Local $maxg = 0
-	  Local $maxb = 0
+   Local $lastStr = ""
+   Local $lastStrTime = 0
 
-	  $i = 0
-	  While $i < $writeColorCheckDelay
-		 $c1 = PixelGetColor($x + $globalOffsetX, $y + $globalOffsetY)
-		 $r = BitShift(BitAND($c1, 0xFF0000), 16)
-		 $g = BitShift(BitAND($c1, 0xFF00), 8)
-		 $b = BitAND($c1, 0xFF)
+   While True
+	  $c1 = PixelGetColor($x + $globalOffsetX, $y + $globalOffsetY)
+	  $r = BitShift(BitAND($c1, 0xFF0000), 16)
+	  $g = BitShift(BitAND($c1, 0xFF00), 8)
+	  $b = BitAND($c1, 0xFF)
 
-		 $minr = _Min($minr, $r)
-		 $ming = _Min($ming, $g)
-		 $minb = _Min($minb, $b)
+	  $minr = _Min($minr, $r)
+	  $ming = _Min($ming, $g)
+	  $minb = _Min($minb, $b)
 
-		 $maxr = _Max($maxr, $r)
-		 $maxg = _Max($maxg, $g)
-		 $maxb = _Max($maxb, $b)
-
-		 Sleep(10)
-		 $i = $i + 1
-	  WEnd
+	  $maxr = _Max($maxr, $r)
+	  $maxg = _Max($maxg, $g)
+	  $maxb = _Max($maxb, $b)
 
 	  $r = Int(($maxr + $minr) / 2)
 	  $g = Int(($maxg + $ming) / 2)
@@ -96,9 +99,19 @@ Func WriteColorCheck()
 	  Local $v = _Max(_Max($vr, $vg), $vb)
 
 	  Local $str = "PixelCheck("&$x&", "&$y&", 0x"&Hex($r,2)&Hex($g,2)&Hex($b,2)&", "&($v+10)&")"
-	  Write($str)
-	  ClipPut($str)
-   EndIf
+
+	  If $str = $lastStr Then
+		 If GetElapsedTime() - $lastStrTime > $writeColorCheckDelay Then
+			ExitLoop
+		 EndIf
+	  Else
+		 $lastStrTime = GetElapsedTime()
+		 $lastStr = $str
+	  EndIf
+   WEnd
+
+   Write($str)
+   ClipPut($str)
 EndFunc
 
 ; -------------------------------------------------------------------------------
@@ -217,7 +230,7 @@ Func PuriCircle()
 
 			Write("Special skill")
 
-			Local $minimumClicks = 3
+			Local $minimumClicks = 10
 			While $minimumClicks > 0
 			   If Not IsPuriSkillActive() Then
 				  $minimumClicks = $minimumClicks - 1
@@ -379,7 +392,13 @@ While 1
 
    Sleep(Random(500, 1000, 1))
 
-   If PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10) Then
+   If (PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10)) OR (PixelCheck(468, 367, 0xD5C1AE, 10) AND PixelCheck(471, 421, 0x7D715D, 10) AND PixelCheck(418, 829, 0x8B7A5D, 10)) OR (PixelCheck(245, 360, 0xB9A292, 10) AND PixelCheck(417, 830, 0x8A7960, 10) AND PixelCheck(239, 159, 0xEFEBDD, 10)) Then
+	  If $coopMode AND PixelCheck(277, 844, 0x8E3017, 10) Then
+		 Write("Clicking OK after story due to coop mode")
+		 Click(247, 843, 10)
+		 ContinueLoop
+	  EndIf
+
 	  If PixelCheck(148, 844, 0xDCCCC3, 10) AND PixelCheck(46, 843, 0x443C35, 10) Then
 		 If $clearStoryMode Then
 			Write("Done with story")
@@ -429,6 +448,41 @@ While 1
 		 ContinueLoop
 	  EndIf
 
+	  If PixelCheck(173, 488, 0x50422B, 10) AND PixelCheck(367, 398, 0xA86634, 10) AND PixelCheck(332, 667, 0x403627, 11) Then
+		 Write("Co-Op Battle, Event, Main Story")
+
+		 If $coopMode Then
+			Write("Clicking Co-Op Battle")
+			Click(116, 445, 10)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(148, 171, 0x4B3A2A, 10) AND PixelCheck(172, 172, 0xDACAC1, 10) AND PixelCheck(334, 174, 0xD9C9C0, 10) Then
+		 Write("Coop Story Selection - Random")
+
+		 If PixelCheck(358, 224, 0xC5B597, 12) AND PixelCheck(239, 230, 0xD3C2A8, 16) AND PixelCheck(79, 235, 0xCCB296, 16) Then
+			Write("No in-story players could be found - Clicking Update")
+			Click(414, 763, 10)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+
+		 If Not IsCoopBattleGood() Then
+			Write("Bad coop battle detected - Clicking Update")
+			Click(414, 763, 10)
+			ContinueLoop
+		 EndIf
+
+		 Write("Detected good coop - joining")
+		 Click(257, 283, 10)
+		 Sleep(1000)
+		 ContinueLoop
+	  EndIf
+
 	  Write("Main buttons visible")
 	  ContinueLoop
    EndIf
@@ -443,6 +497,59 @@ While 1
 	  EndIf
 
 	  Write("White Red button")
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(153, 852, 0x2F2716, 10) AND PixelCheck(202, 848, 0x872C13, 10) AND PixelCheck(324, 848, 0x282017, 10) Then
+	  If PixelCheck(155, 298, 0xF8F0DC, 10) AND PixelCheck(75, 416, 0xECE2C2, 10) Then
+		 Write("Login Bonus - Standard Login Bonus")
+		 Click(243, 847, 10)
+		 ContinueLoop
+	  EndIf
+	  If PixelCheck(148, 94, 0xFFFDED, 10) AND PixelCheck(250, 99, 0xFFFDED, 10) AND NOT PixelCheck(158, 94, 0xFFFDED, 10) Then
+		 Write("Login Bonus - Supplamental")
+		 Click(243, 847, 10)
+		 ContinueLoop
+	  EndIf
+	  If PixelCheck(285, 767, 0x0E0502, 10) AND PixelCheck(437, 640, 0x151413, 10) AND PixelCheck(55, 769, 0x0A0806, 10) Then
+		 Write("Failed to join story")
+		 Click(243, 847, 10)
+		 ContinueLoop
+	  EndIf
+
+	  Write("Red button")
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(153, 837, 0x2A2212, 10) AND PixelCheck(185, 844, 0xD7C7B7, 10) AND PixelCheck(334, 843, 0x2C2413, 10) Then
+	  If PixelCheck(83, 54, 0x675C45, 10) AND PixelCheck(110, 57, 0x383326, 10) AND PixelCheck(450, 135, 0xDACAC2, 10) Then
+		 Write("Latest News")
+		 Click(244, 841, 10)
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(303, 262, 0xC3AFA7, 10) AND PixelCheck(416, 377, 0xD8C8B7, 10) AND PixelCheck(377, 481, 0xD1C1B0, 10) Then
+		 Write("Recover AP - Insufficient AP to continue the story")
+		 If $puriRefresh Then
+			Click(235, 378, 10)
+			Sleep(1000)
+		 EndIf
+		 ContinueLoop
+	  EndIf
+
+	  Write("White button")
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(126, 152, 0xFFAA4E, 10) AND PixelCheck(472, 709, 0x090807, 11) AND PixelCheck(283, 843, 0x120603, 11) Then
+	  Write("Clear Bonus")
+	  Click(436, 707, 10)
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(482, 694, 0x090807, 10) AND PixelCheck(285, 843, 0x110603, 10) AND PixelCheck(216, 428, 0x254555, 10) Then
+	  Write("You received a Twilight Crystal")
+	  Click(436, 707, 10)
 	  ContinueLoop
    EndIf
 
