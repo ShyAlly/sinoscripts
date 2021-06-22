@@ -104,14 +104,16 @@ $_IsPuriExitButton_Response = 0
 $_IsPuriExitButton_Time = 0
 Func IsPuriExitButton()
    Local $nowTime = GetElapsedTime()
-   If $nowTime - $_IsPuriExitButton_Time < 1000 Then
+   If $nowTime - $_IsPuriExitButton_Time < 0 Then
 	  Return $_IsPuriExitButton_Response
    EndIf
 
    $_IsPuriExitButton_Response = 0
    ; Standard OK button
-   If Not PixelCheck(54, 117, 0xF1E08C, 10) Then
-	  $_IsPuriExitButton_Response = 1
+   If PixelCheck(55, 117, 0xF1E08B, 10) AND PixelCheck(55, 124, 0xC3A349, 10) Then
+	  $_IsPuriExitButton_Response = 0
+   Else
+	   $_IsPuriExitButton_Response = 1
    EndIf
 
    $_IsPuriExitButton_Time = $nowTime
@@ -175,6 +177,8 @@ Func PuriCircle()
          If IsPuriExitButton() Then
             ExitLoop
          EndIf
+
+		 Sleep(30)
 
          $i = Mod($i + 2, 16*$positionMultiplier)
       WEnd
@@ -260,15 +264,16 @@ While 1
 	  ContinueLoop
    EndIf
 
-   $timeout = $timeout + 1
-   If $timeout > $maxTimeout Then
-	 Write("Timeout has been reached. Something's wrong.")
-	 AlertProblem()
-	 ContinueLoop
-   EndIf
-
    If PixelCheck(230, 768, 0xCE5A31, 10) AND PixelCheck(319, 808, 0x412414, 10) Then
 	  Write("Ship")
+
+	  If Not PixelCheck(349, 729, 0xE8C66F, 10) Then
+		 Write("Low ship SP, entering recovery")
+		 Click(433, 717, 10)
+		 Sleep(500)
+		 ContinueLoop
+	  EndIf
+
 	  Click(416, 375, 20)
 	  Sleep(500)
 	  ContinueLoop
@@ -288,7 +293,18 @@ While 1
 	  ContinueLoop
    EndIf
 
-   Write("Uncertain situation - clicking attack")
-   Click(62, 790, 10)
-   Sleep(100)
+   If PixelCheck(149, 730, 0xD2B057, 10) Then
+	  Write("Enough SP - clicking attack")
+	  Click(62, 790, 10)
+	  Sleep(100)
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(55, 117, 0xF1E08B, 10) AND PixelCheck(55, 124, 0xC3A349, 10) Then
+	  Write("Recovering SP")
+	  PuriCircle()
+	  ContinueLoop
+   EndIf
+
+   Write("Unknown situation")
 WEnd
