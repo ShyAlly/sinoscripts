@@ -293,6 +293,18 @@ While 1
 	  ContinueLoop
    EndIf
 
+   If PixelCheck(55, 117, 0xF1E08B, 10) AND PixelCheck(55, 124, 0xC3A349, 10) Then
+	  Write("Recovering SP")
+	  PuriCircle()
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(141, 729, 0x312F2B, 20) OR PixelCheck(151, 729, 0x27201B, 10) Then
+	  Write("Not enough SP")
+	  Click(430, 712, 10)
+	  ContinueLoop
+   EndIf
+
    If PixelCheck(149, 730, 0xD2B057, 10) Then
 	  Write("Enough SP - clicking attack")
 	  Click(62, 790, 10)
@@ -300,11 +312,7 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(55, 117, 0xF1E08B, 10) AND PixelCheck(55, 124, 0xC3A349, 10) Then
-	  Write("Recovering SP")
-	  PuriCircle()
-	  ContinueLoop
-   EndIf
-
    Write("Unknown situation")
+   Click(62, 790, 10)
+   Sleep(100)
 WEnd
