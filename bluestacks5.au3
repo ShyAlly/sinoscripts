@@ -21,9 +21,9 @@ HotKeySet("{home}", PuriCircle)
 $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 
-$farmMastery = 0                  ; This is for farming Mastery from Study Hall
+$farmMastery = 1                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
-$coopMode = 1					  ; For clearing things in coop
+$coopMode = 0					  ; For clearing things in coop
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
 $puriRefresh = 1                  ; Use purification to refresh
@@ -427,11 +427,11 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10) Then
+   If (PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10)) OR (PixelCheck(304, 824, 0x91785D, 10) AND PixelCheck(386, 824, 0x92795E, 10) AND PixelCheck(476, 885, 0x2A221A, 10)) Then
 	  If Not PixelCheck(102, 823, 0xE5D49A, 10) Then
 		 Write("Clicking on Story")
 		 Click(104, 858, 10)
-		 Sleep(2000)
+		 Sleep(1000)
 		 ContinueLoop
 	  EndIf
 
@@ -488,7 +488,7 @@ While 1
    EndIf
 
    If PixelCheck(220, 840, 0xD8CDC0, 10) AND PixelCheck(241, 838, 0x2F2716, 10) AND PixelCheck(268, 838, 0x8E331A, 10) Then
-	  If PixelCheck(177, 370, 0xD5CDC1, 10) AND PixelCheck(164, 367, 0x060606, 10) Then
+	  If (PixelCheck(177, 370, 0xD5CDC1, 10) AND PixelCheck(164, 367, 0x060606, 10)) OR (PixelCheck(178, 401, 0xBBB5AA, 10) AND PixelCheck(177, 397, 0x0B0B0B, 10) AND PixelCheck(458, 542, 0x141311, 10) AND PixelCheck(455, 578, 0x0E0C0B, 10)) Then
 		 Write("Start purifying?")
 		 Click(324, 841, 10) ; OK
 		 Sleep(5000)
@@ -521,19 +521,25 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(153, 837, 0x2A2212, 10) AND PixelCheck(185, 844, 0xD7C7B7, 10) AND PixelCheck(334, 843, 0x2C2413, 10) Then
-	  If PixelCheck(83, 54, 0x675C45, 10) AND PixelCheck(110, 57, 0x383326, 10) AND PixelCheck(450, 135, 0xDACAC2, 10) Then
-		 Write("Latest News")
-		 Click(244, 841, 10)
-		 ContinueLoop
-	  EndIf
-
+   If (PixelCheck(153, 837, 0x2A2212, 10) AND PixelCheck(185, 844, 0xD7C7B7, 10) AND PixelCheck(334, 843, 0x2C2413, 10)) OR (PixelCheck(141, 839, 0x2D2519, 10) AND PixelCheck(182, 842, 0xDACABA, 10) AND PixelCheck(327, 850, 0x2D251B, 10)) Then
 	  If PixelCheck(303, 262, 0xC3AFA7, 10) AND PixelCheck(416, 377, 0xD8C8B7, 10) AND PixelCheck(377, 481, 0xD1C1B0, 10) Then
 		 Write("Recover AP - Insufficient AP to continue the story")
 		 If $puriRefresh Then
 			Click(235, 378, 10)
 			Sleep(1000)
 		 EndIf
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(83, 54, 0x675C45, 10) AND PixelCheck(110, 57, 0x383326, 10) AND PixelCheck(450, 135, 0xDACAC2, 10) Then
+		 Write("Latest News")
+		 Click(244, 841, 10)
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(39, 595, 0x7B7671, 12) AND NOT PixelCheck(40, 614, 0x7B7671, 12) Then
+		 Write("Don't display today")
+		 Click(244, 841, 10)
 		 ContinueLoop
 	  EndIf
 
