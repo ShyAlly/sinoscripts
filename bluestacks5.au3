@@ -3,7 +3,7 @@
 ; Controls
 HotKeySet("{end}", "end")
 HotKeySet("{insert}", WriteColorCheck)
-HotKeySet("{home}", PuriCircle)
+;HotKeySet("{home}", PuriCircle)
 
 ; This is for Bluestacks v5
 ; 540x960 portrait resolution
@@ -23,7 +23,8 @@ $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 
 $farmMastery = 1                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
-$coopMode = 0					  ; For clearing things in coop
+$coopMode = 2					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
+$avoidCompletedStories = 1        ; For avoiding stories already marked as Complete
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
 $puriRefresh = 1                  ; Use purification to refresh
@@ -436,8 +437,19 @@ While 1
 	  EndIf
 
 	  If PixelCheck(57, 769, 0x604F3F, 10) AND PixelCheck(190, 766, 0x892E15, 10) Then
-		 If PixelCheck(436, 752, 0x463D2D, 10) Then
-			Write("Start Story - Skip ticket disabled")
+
+		 If PixelCheck(436, 752, 0x463D2D, 10) OR PixelCheck(434, 753, 0x8B7A5A, 10) Then
+
+			If $avoidCompletedStories Then
+			   If PixelCheck(66, 416, 0x611F07, 10) OR (PixelCheck(79, 416, 0xDAD0C7, 10) AND PixelCheck(125, 402, 0xDED0C6, 10)) Then
+				  Write("Start Story - Story is already complete, returning")
+				  Click(45, 771, 10)
+				  Sleep(500)
+				  ContinueLoop
+			   EndIf
+			EndIf
+
+			Write("Start Story - Skip ticket visible")
 			Click(245, 767, 10)
 			OnStoryStart()
 			Sleep(3000)
@@ -461,24 +473,73 @@ While 1
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(148, 171, 0x4B3A2A, 10) AND PixelCheck(172, 172, 0xDACAC1, 10) AND PixelCheck(334, 174, 0xD9C9C0, 10) Then
-		 Write("Coop Story Selection - Random")
-
-		 If PixelCheck(358, 224, 0xC5B597, 12) AND PixelCheck(239, 230, 0xD3C2A8, 16) AND PixelCheck(79, 235, 0xCCB296, 16) Then
-			Write("No in-story players could be found - Clicking Update")
-			Click(414, 763, 10)
+	  If PixelCheck(55, 771, 0x5D4C3C, 10) AND PixelCheck(78, 771, 0xDBD3CB, 10) AND PixelCheck(354, 765, 0xD7C7BE, 10) AND PixelCheck(383, 768, 0x513921, 10) Then
+		 If Not $coopMode Then
+			Write("Co-op menu while not in coop - returning to home")
+			Click(34, 860, 10)
 			Sleep(1000)
 			ContinueLoop
 		 EndIf
 
-		 If Not IsCoopBattleGood() Then
+		 Local $currentCoopTab = 0
+		 If PixelCheck(148, 171, 0x4B3A2A, 10) AND PixelCheck(172, 172, 0xDACAC1, 10) AND PixelCheck(334, 174, 0xD9C9C0, 10) Then
+			$currentCoopTab = 1
+		 ElseIf PixelCheck(149, 176, 0xD2C2B9, 10) AND PixelCheck(166, 177, 0x3E3525, 10) AND PixelCheck(336, 183, 0xC8B7AF, 10) Then
+			$currentCoopTab = 2
+		 ElseIf PixelCheck(150, 178, 0xD3C3BA, 10) AND PixelCheck(173, 180, 0xCEBDB5, 10) AND PixelCheck(334, 178, 0x473E2E, 10) Then
+			$currentCoopTab = 3
+		 Else
+			Write("Co-op menu detected but can't determine current tab")
+			ContinueLoop
+		 EndIf
+
+		 If Not ($currentCoopTab = $coopMode) Then
+			If $coopMode = 1 Then
+			   Click(79, 172, 10)
+			ElseIf $coopMode = 2 Then
+			   Click(241, 174, 10)
+			ElseIf $coopMode = 3 Then
+			   Click(410, 173, 10)
+			Else
+			   Write("Co-op menu detected on menu " & $currentCoopTab & " instead of " & $coopMode & " but wtf is that.")
+			   ContinueLoop
+			EndIf
+			Write("Co-op menu detected, switching to tab " & $coopMode)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+
+		 Local $goodCoop = 1
+
+		 If PixelCheck(154, 273, 0x2F2C2A, 10) AND PixelCheck(391, 274, 0x2F2B29, 10) Then
+			Write("Co-op story is unavilable - Clicking Update")
+			$goodCoop = 0
+		 EndIf
+
+		 If $goodCoop AND PixelCheck(358, 224, 0xC5B597, 12) AND PixelCheck(239, 230, 0xD3C2A8, 16) AND PixelCheck(79, 235, 0xCCB296, 16) Then
+			Write("No in-story players could be found - Clicking Update")
+			$goodCoop = 0
+		 EndIf
+
+		 If PixelCheck(96, 296, 0xD1BCA4, 11) AND PixelCheck(246, 278, 0xCCBB9C, 15) Then
+			Write("No in-story players could be found 2 - Clicking Update")
+			$goodCoop = 0
+		 EndIf
+
+		 If $goodCoop AND Not IsCoopBattleGood() Then
 			Write("Bad coop battle detected - Clicking Update")
+			$goodCoop = 0
+		 EndIf
+
+		 If Not $goodCoop Then
 			Click(414, 763, 10)
+			Sleep(1000)
+			$timeout = $timeout - 1
 			ContinueLoop
 		 EndIf
 
 		 Write("Detected good coop - joining")
-		 Click(257, 283, 10)
+		 Click(248, 285, 10)
 		 Sleep(1000)
 		 ContinueLoop
 	  EndIf
@@ -493,6 +554,13 @@ While 1
 		 Click(324, 841, 10) ; OK
 		 Sleep(5000)
 		 PuriCircle()
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(397, 401, 0x060606, 10) AND PixelCheck(407, 737, 0x0C0D0A, 10) AND PixelCheck(26, 776, 0x0A0A09, 10) AND PixelCheck(43, 99, 0x0B0807, 10) Then
+		 Write("You're part way through a story. Continue?")
+		 Click(163, 839, 10)
+		 Sleep(1000)
 		 ContinueLoop
 	  EndIf
 
