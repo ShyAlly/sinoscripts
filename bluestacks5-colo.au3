@@ -21,10 +21,6 @@ HotKeySet("{home}", PuriCircle)
 $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 
-$farmMastery = 0                  ; This is for farming Mastery from Study Hall
-$clearStoryMode = 0               ; For clearing new content with a Next button
-$coopMode = 0					  ; For clearing things in coop
-
 ; More internalish things
 $maxTimeout = 150
 $maxBattleTimeout = 1500
