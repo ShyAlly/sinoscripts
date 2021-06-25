@@ -21,9 +21,9 @@ HotKeySet("{insert}", WriteColorCheck)
 $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 
-$farmMastery = 1                  ; This is for farming Mastery from Study Hall
+$farmMastery = 0                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
-$coopMode = 2					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
+$coopMode = 1					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
 $avoidCompletedStories = 1        ; For avoiding stories already marked as Complete
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
@@ -317,6 +317,12 @@ Func Init()
    WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
    Sleep(50)
    WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
+   Sleep(500)
+
+   If PixelCheck(466, 561, 0x232642, 10) Then
+	  Write("It seems you didn't close the controls on the right")
+	  Exit
+   EndIf
 
    Write("Array count: " & $children[0][0])
    Local $i = 1
@@ -393,7 +399,7 @@ While 1
 
    Sleep(Random(500, 1000, 1))
 
-   If (PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10)) OR (PixelCheck(468, 367, 0xD5C1AE, 10) AND PixelCheck(471, 421, 0x7D715D, 10) AND PixelCheck(418, 829, 0x8B7A5D, 10)) OR (PixelCheck(245, 360, 0xB9A292, 10) AND PixelCheck(417, 830, 0x8A7960, 10) AND PixelCheck(239, 159, 0xEFEBDD, 10)) Then
+   If (PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10)) OR (PixelCheck(468, 367, 0xD5C1AE, 10) AND PixelCheck(471, 421, 0x7D715D, 10) AND PixelCheck(418, 829, 0x8B7A5D, 10)) OR (PixelCheck(245, 360, 0xB9A292, 10) AND PixelCheck(417, 830, 0x8A7960, 10) AND PixelCheck(239, 159, 0xEFEBDD, 10)) OR (PixelCheck(428, 154, 0xC1B29E, 10) AND PixelCheck(469, 345, 0xCDBEAC, 10) AND PixelCheck(415, 830, 0x897858, 10)) Then
 	  If $coopMode AND PixelCheck(277, 844, 0x8E3017, 10) Then
 		 Write("Clicking OK after story due to coop mode")
 		 Click(247, 843, 10)
@@ -428,7 +434,7 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If (PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10)) OR (PixelCheck(304, 824, 0x91785D, 10) AND PixelCheck(386, 824, 0x92795E, 10) AND PixelCheck(476, 885, 0x2A221A, 10)) Then
+   If (PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10)) OR (PixelCheck(304, 824, 0x91785D, 10) AND PixelCheck(386, 824, 0x92795E, 10) AND PixelCheck(476, 885, 0x2A221A, 10)) OR (PixelCheck(321, 794, 0x3F3626, 10) AND PixelCheck(354, 771, 0x9E7E56, 10) AND PixelCheck(446, 804, 0x736342, 10)) Then
 	  If Not PixelCheck(102, 823, 0xE5D49A, 10) Then
 		 Write("Clicking on Story")
 		 Click(104, 858, 10)
@@ -439,10 +445,10 @@ While 1
 	  If PixelCheck(57, 769, 0x604F3F, 10) AND PixelCheck(190, 766, 0x892E15, 10) Then
 
 		 If PixelCheck(436, 752, 0x463D2D, 10) OR PixelCheck(434, 753, 0x8B7A5A, 10) Then
-
 			If $avoidCompletedStories Then
 			   If PixelCheck(66, 416, 0x611F07, 10) OR (PixelCheck(79, 416, 0xDAD0C7, 10) AND PixelCheck(125, 402, 0xDED0C6, 10)) Then
 				  Write("Start Story - Story is already complete, returning")
+				  $timeout = $timeout - 2
 				  Click(45, 771, 10)
 				  Sleep(500)
 				  ContinueLoop
@@ -521,7 +527,7 @@ While 1
 			$goodCoop = 0
 		 EndIf
 
-		 If PixelCheck(96, 296, 0xD1BCA4, 11) AND PixelCheck(246, 278, 0xCCBB9C, 15) Then
+		 If $goodCoop AND PixelCheck(96, 296, 0xD1BCA4, 11) AND PixelCheck(246, 278, 0xCCBB9C, 15) Then
 			Write("No in-story players could be found 2 - Clicking Update")
 			$goodCoop = 0
 		 EndIf
@@ -554,6 +560,23 @@ While 1
 		 Click(324, 841, 10) ; OK
 		 Sleep(5000)
 		 PuriCircle()
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(447, 436, 0x161413, 10) AND PixelCheck(444, 403, 0x060606, 10) AND PixelCheck(444, 363, 0x141312, 10) AND PixelCheck(290, 771, 0x0E0401, 10) Then
+		 Write("Small text box")
+		 If PixelCheck(222, 402, 0x948E87, 10) Then
+			Write("Start purifying? 2")
+			Click(324, 841, 10) ; OK
+			Sleep(5000)
+			PuriCircle()
+			ContinueLoop
+		 EndIf
+	  EndIf
+
+	  If PixelCheck(465, 350, 0x100D0B, 11) AND PixelCheck(461, 394, 0x060606, 10) AND PixelCheck(458, 452, 0x0E0C0A, 11) AND PixelCheck(57, 771, 0x0A0806, 10) Then
+		 Write("Coop - Connection to server failed - Clicking OK")
+		 Click(323, 841, 10)
 		 ContinueLoop
 	  EndIf
 

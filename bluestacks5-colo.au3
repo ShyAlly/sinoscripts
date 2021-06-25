@@ -301,6 +301,14 @@ While 1
 	  ContinueLoop
    EndIf
 
+   If PixelCheck(328, 796, 0x2B3B23, 10) Then
+	  If Not PixelCheck(442, 701, 0x392C1F, 10) Then
+	  Write("Revive")
+	  Click(438, 711, 10)
+	  ContinueLoop
+	  EndIf
+   EndIf
+
    If PixelCheck(149, 730, 0xD2B057, 10) Then
 	  Write("Enough SP - clicking attack")
 	  Click(62, 790, 10)
