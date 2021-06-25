@@ -20,6 +20,7 @@ HotKeySet("{insert}", WriteColorCheck)
 
 $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
+$puriLockoutTimeHours = 8         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
@@ -31,9 +32,11 @@ $puriRefresh = 1                  ; Use purification to refresh
 $puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
+$puriRefreshLockoutPeriod = ((0*60)+52)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 1500
 $writeColorCheckDelay = 500
+$returnToHome = 0
 
 $globalOffsetX = 10
 $globalOffsetY = 10
@@ -42,6 +45,19 @@ $timeout = 0
 $battleTimeout = 0
 
 ; Functions that change frequently
+
+Func AdjustSettings($outOfAp)
+   If $outOfAp AND Not $farmMastery AND $puriRefreshLockoutPeriod > GetElapsedTime() Then
+	  $farmMastery = 1
+	  $returnToHome = 1
+	  Return
+   EndIf
+
+   If $farmMastery AND $puriRefreshLockoutPeriod > 0 AND $puriRefreshLockoutPeriod < GetElapsedTime() Then
+	  $farmMastery = 0
+	  $returnToHome = 1
+   EndIf
+EndFunc
 
 Func IsCoopBattleGood()
    Return True
@@ -174,6 +190,8 @@ EndFunc
 
 Func PuriCircle()
    Local $var = 5
+
+   $puriRefreshLockoutPeriod = GetElapsedTime() + ($puriLockoutTimeHours * 60 * 60 * 1000)
 
    ; The dead center locations of each puri victim
    Local $realPositions[16] = [374, 473, 383, 591, 352, 729, 228, 716, 110, 646, 93,  510, 160, 393, 287, 378]
@@ -397,44 +415,61 @@ While 1
 	  ContinueLoop
    EndIf
 
+   AdjustSettings(False)
    Sleep(Random(500, 1000, 1))
 
-   If (PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10)) OR (PixelCheck(468, 367, 0xD5C1AE, 10) AND PixelCheck(471, 421, 0x7D715D, 10) AND PixelCheck(418, 829, 0x8B7A5D, 10)) OR (PixelCheck(245, 360, 0xB9A292, 10) AND PixelCheck(417, 830, 0x8A7960, 10) AND PixelCheck(239, 159, 0xEFEBDD, 10)) OR (PixelCheck(428, 154, 0xC1B29E, 10) AND PixelCheck(469, 345, 0xCDBEAC, 10) AND PixelCheck(415, 830, 0x897858, 10)) Then
-	  If $coopMode AND PixelCheck(277, 844, 0x8E3017, 10) Then
+   If (PixelCheck(443, 345, 0xCABAAA, 10) AND PixelCheck(280, 841, 0x8D2E15, 10) AND PixelCheck(416, 828, 0x373024, 10)) OR (PixelCheck(463, 344, 0xD5C0AC, 10) AND PixelCheck(458, 579, 0x8E7F70, 10) AND PixelCheck(275, 844, 0x8D3017, 10) AND PixelCheck(415, 830, 0x4C3A28, 10)) OR (PixelCheck(455, 367, 0xC6C1B1, 10) AND PixelCheck(458, 588, 0x8A7E70, 10)) OR (PixelCheck(468, 367, 0xD5C1AE, 10) AND PixelCheck(471, 421, 0x7D715D, 10) AND PixelCheck(418, 829, 0x8B7A5D, 10)) OR (PixelCheck(245, 360, 0xB9A292, 10) AND PixelCheck(417, 830, 0x8A7960, 10) AND PixelCheck(239, 159, 0xEFEBDD, 10)) OR (PixelCheck(428, 154, 0xC1B29E, 10) AND PixelCheck(469, 345, 0xCDBEAC, 10) AND PixelCheck(415, 830, 0x897858, 10)) OR (PixelCheck(144, 842, 0xDBCBC2, 10) AND PixelCheck(195, 843, 0x832E0F, 10) AND PixelCheck(416, 829, 0x3A3325, 10)) Then
+	  If $returnToHome Then
+		 Write("Clicking OK after story due to Return To Home mode")
+		 Click(247, 843, 10)
+		 ContinueLoop
+	  EndIf
+
+	  If (Not $farmMastery) AND $coopMode AND PixelCheck(277, 844, 0x8E3017, 10) Then
 		 Write("Clicking OK after story due to coop mode")
 		 Click(247, 843, 10)
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(148, 844, 0xDCCCC3, 10) AND PixelCheck(46, 843, 0x443C35, 10) Then
-		 If $clearStoryMode Then
-			Write("Done with story")
-			AlertProblem()
+	  If PixelCheck(139, 844, 0xDCCCC3, 10) Then
+		 If PixelCheck(46, 843, 0x443C35, 10) OR PixelCheck(45, 846, 0x6E6760, 10) OR PixelCheck(46, 844, 0x685E57, 10) Then
+			If $clearStoryMode Then
+			   Write("Done with story")
+			   AlertProblem()
+			   ContinueLoop
+			EndIf
+
+			Write("Try Again")
+			Click(86, 845, 10)
+			OnStoryStart()
+			Sleep(2000)
 			ContinueLoop
 		 EndIf
 
-		 Write("Try Again")
-		 Click(86, 845, 10)
-		 OnStoryStart()
-		 Sleep(2000)
+		 If PixelCheck(72, 845, 0x5C524B, 10) Then
+			Write("Next Button Detected")
+			If $clearStoryMode Then
+			   Click(86, 845, 10)
+			   OnStoryStart()
+			   Sleep(1000)
+			   ContinueLoop
+			EndIf
+		 EndIf
+
+		 Write("Drop Rewards > White Button detected")
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(148, 844, 0xDCCCC3, 10) AND PixelCheck(72, 845, 0x5C524B, 10) Then
-		 Write("Next Button Detected")
-		 If $clearStoryMode Then
-			Click(86, 845, 10)
-			OnStoryStart()
-			Sleep(1000)
-			ContinueLoop
-		 EndIf
-	  EndIf
-
-	  Write("Drop Rewards")
+	  Write("Drop Rewards - No white button")
 	  ContinueLoop
    EndIf
 
    If (PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10)) OR (PixelCheck(304, 824, 0x91785D, 10) AND PixelCheck(386, 824, 0x92795E, 10) AND PixelCheck(476, 885, 0x2A221A, 10)) OR (PixelCheck(321, 794, 0x3F3626, 10) AND PixelCheck(354, 771, 0x9E7E56, 10) AND PixelCheck(446, 804, 0x736342, 10)) Then
+	  If PixelCheck(34, 824, 0xE1D190, 10) Then
+		 Write("At Home")
+		 $returnToHome = 0
+	  EndIf
+
 	  If Not PixelCheck(102, 823, 0xE5D49A, 10) Then
 		 Write("Clicking on Story")
 		 Click(104, 858, 10)
@@ -466,8 +501,15 @@ While 1
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(173, 488, 0x50422B, 10) AND PixelCheck(367, 398, 0xA86634, 10) AND PixelCheck(332, 667, 0x403627, 11) Then
+	  If (PixelCheck(173, 488, 0x50422B, 10) AND PixelCheck(367, 398, 0xA86634, 10) AND PixelCheck(332, 667, 0x403627, 11)) OR (PixelCheck(97, 431, 0x000000, 10) AND PixelCheck(172, 668, 0x3F3627, 10) AND PixelCheck(412, 718, 0x9B8A71, 10)) Then
 		 Write("Co-Op Battle, Event, Main Story")
+
+		 If $farmMastery Then
+			Write("Clicking Event to farm mastery")
+			Click(370, 438, 10)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
 
 		 If $coopMode Then
 			Write("Clicking Co-Op Battle")
@@ -550,6 +592,58 @@ While 1
 		 ContinueLoop
 	  EndIf
 
+	  If PixelCheck(16, 170, 0x403727, 10) AND PixelCheck(235, 174, 0x423929, 10) AND PixelCheck(258, 175, 0xD5C5BC, 10) AND PixelCheck(469, 177, 0xCFBFB6, 10) Then
+		 Write("Limited-Time Events")
+
+		 If $farmMastery Then
+			If PixelCheck(255, 497, 0x294528, 10) AND PixelCheck(389, 531, 0xFBF5EC, 10) AND PixelCheck(427, 625, 0x6A6352, 10) Then
+			   Write("Study Hall found - clicking")
+			   Click(246, 545, 10)
+			   Sleep(1000)
+			   ContinueLoop
+			EndIf
+
+			Write("Study Hall not found, scrolling down")
+
+			Local $y = 700
+
+			MoveMouse(470, $y, 10)
+			Sleep(50)
+
+			HoldMouse(True)
+			Sleep(50)
+
+			While $y > 230
+			   MoveMouse(470, $y, 10)
+			   $y = $y - 10
+			   Sleep(50)
+			WEnd
+			HoldMouse(False)
+
+			Sleep(2000)
+			ContinueLoop
+		 EndIf
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(443, 704, 0x6D441A, 10) AND PixelCheck(379, 710, 0x6D451B, 10) Then
+		 If $returnToHome Then
+			Write("Last stage clear, but returning to home")
+			Click(34, 859, 10)
+			ContinueLoop
+		 EndIf
+
+		 If $farmMastery AND (PixelCheck(424, 689, 0x9CB9C0, 10) OR PixelCheck(389, 683, 0xBDCFD6, 10) OR PixelCheck(392, 684, 0xBACBCE, 10)) Then
+			Write("Artifact Study Hall detected")
+			Click(243, 687, 10)
+			ContinueLoop
+		 EndIf
+
+		 Write("Last Stage CLEAR - what am I supposed to do? Returning to home")
+		 $returnToHome = 1
+		 ContinueLoop
+	  EndIf
+
 	  Write("Main buttons visible")
 	  ContinueLoop
    EndIf
@@ -575,8 +669,7 @@ While 1
 	  EndIf
 
 	  If PixelCheck(465, 350, 0x100D0B, 11) AND PixelCheck(461, 394, 0x060606, 10) AND PixelCheck(458, 452, 0x0E0C0A, 11) AND PixelCheck(57, 771, 0x0A0806, 10) Then
-		 Write("Coop - Connection to server failed - Clicking OK")
-		 Click(323, 841, 10)
+		 Write("UNKNOWN SITUATION. Either need to puri or connection failed.")
 		 ContinueLoop
 	  EndIf
 
@@ -584,6 +677,30 @@ While 1
 		 Write("You're part way through a story. Continue?")
 		 Click(163, 839, 10)
 		 Sleep(1000)
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(95, 455, 0xDFDC9C, 10) AND PixelCheck(156, 476, 0xE9D8D0, 10) AND PixelCheck(305, 488, 0xC3B7A9, 10) Then
+		 Write("Use a purification ticket to play?")
+		 If $puriTicketRefresh Then
+			Click(324, 841, 10) ; OK
+			Sleep(5000)
+			PuriCircle()
+			ContinueLoop
+		 EndIf
+
+		 AdjustSettings(True)
+		 Click(164, 843, 10) ; Cancel
+
+		 If $returnToHome Then
+			Write("Returning to Home")
+			Sleep(2000)
+			Click(32, 856, 10)
+			ContinueLoop
+		 EndIf
+
+		 Write("Waiting 60s to retry")
+		 Sleep(60000)
 		 ContinueLoop
 	  EndIf
 
@@ -609,6 +726,7 @@ While 1
 	  EndIf
 
 	  Write("Red button")
+	  Click(243, 847, 10)
 	  ContinueLoop
    EndIf
 
@@ -647,6 +765,13 @@ While 1
    If PixelCheck(482, 694, 0x090807, 10) AND PixelCheck(285, 843, 0x110603, 10) AND PixelCheck(216, 428, 0x254555, 10) Then
 	  Write("You received a Twilight Crystal")
 	  Click(436, 707, 10)
+	  ContinueLoop
+   EndIf
+
+   If PixelCheck(417, 828, 0xFFFFFF, 10) AND PixelCheck(436, 828, 0x000000, 10) AND PixelCheck(55, 120, 0xE1D2C1, 30) Then
+	  Write("Tap to Start")
+	  Click(256, 824, 14)
+	  Sleep(5000)
 	  ContinueLoop
    EndIf
 
