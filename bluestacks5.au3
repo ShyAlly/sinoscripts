@@ -13,7 +13,9 @@ HotKeySet("{insert}", WriteColorCheck)
 ; Sidebar closed
 ; Controls hidden
 
-; Make sure to set in-game quality to High
+; In-game settings:
+; High Quality
+; Skip seen scenes
 
 ; 0 means "no" or "off"
 ; 1 means "on" or "yes"
@@ -22,7 +24,7 @@ $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 $puriLockoutTimeHours = 8         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
 
-$farmMastery = 0                  ; This is for farming Mastery from Study Hall
+$farmMastery = 1                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
 $coopMode = 1					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
 $avoidCompletedStories = 1        ; For avoiding stories already marked as Complete
@@ -32,7 +34,7 @@ $puriRefresh = 1                  ; Use purification to refresh
 $puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
-$puriRefreshLockoutPeriod = ((0*60)+52)* 60 * 1000		; Milliseconds until purification is ready
+$puriRefreshLockoutPeriod = ((0*60)+0)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 1500
 $writeColorCheckDelay = 500
@@ -365,6 +367,58 @@ Func Init()
    Write("Window hooked")
 EndFunc
 
+Func ClaimPresentBox()
+   While 1
+	  If Not WinExists($windowHandle) Then
+		 Write("Window not found - did it close?")
+		 AlertProblem()
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(381, 767, 0x9A3723, 10) Then
+		 Write("Claim All")
+		 Click(427, 768, 10)
+		 Sleep(500)
+		 ContinueLoop
+	  EndIf
+	  If PixelCheck(152, 842, 0x2D2514, 10) AND PixelCheck(200, 843, 0x872C13, 10) AND PixelCheck(331, 839, 0x2A2211, 10) Then
+		 Write("OK")
+		 Click(240, 841, 10)
+		 Sleep(500)
+		 ContinueLoop
+	  EndIf
+	  If PixelCheck(222, 846, 0xDACAB9, 10) AND PixelCheck(263, 841, 0x8F2D14, 10) AND PixelCheck(243, 839, 0x2C2415, 10) Then
+		 Write("Cancel OK")
+		 If PixelCheck(479, 505, 0x1E1C1B, 10) Then
+			Write("Nothing is being claimed")
+			AlertProblem()
+			ContinueLoop
+		 EndIf
+		 Click(163, 842, 10)
+		 Sleep(500)
+		 ContinueLoop
+	  EndIf
+   WEnd
+EndFunc
+
+Func ShootingGallery()
+   Write("TBD")
+EndFunc
+
+If PixelCheck(382, 823, 0xE5D498, 10) AND PixelCheck(408, 836, 0x836A49, 10) AND PixelCheck(339, 845, 0x403727, 10) AND PixelCheck(182, 122, 0x151515, 10) Then
+   Write("Claim Present Box mode detected")
+   ClaimPresentBox()
+   Write("Done")
+   Exit
+EndIf
+
+If PixelCheck(55, 764, 0x5E4E3D, 10) AND PixelCheck(187, 642, 0xAC512E, 10) AND PixelCheck(431, 774, 0x7B766C, 10) Then
+   Write("Shooting Gallery Mode")
+   ShootingGallery()
+   Write("Done")
+   Exit
+EndIf
+
 While 1
    If GetElapsedTime() > $maxScriptTime Then
 	  Write("Time limit reached.")
@@ -666,12 +720,12 @@ While 1
 			PuriCircle()
 			ContinueLoop
 		 EndIf
-	  EndIf
 
-	  If PixelCheck(465, 350, 0x100D0B, 11) AND PixelCheck(461, 394, 0x060606, 10) AND PixelCheck(458, 452, 0x0E0C0A, 11) AND PixelCheck(57, 771, 0x0A0806, 10) Then
-		 Write("UNKNOWN SITUATION. Either need to puri or connection failed.")
+		 Write("UNKNOWN SITUATION. Either need to puri or connection failed. Clicking cancel.")
+		 Click(163, 839, 10)
 		 ContinueLoop
 	  EndIf
+
 
 	  If PixelCheck(397, 401, 0x060606, 10) AND PixelCheck(407, 737, 0x0C0D0A, 10) AND PixelCheck(26, 776, 0x0A0A09, 10) AND PixelCheck(43, 99, 0x0B0807, 10) Then
 		 Write("You're part way through a story. Continue?")
