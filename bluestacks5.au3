@@ -24,7 +24,7 @@ $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 $puriLockoutTimeHours = 8         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
 
-$farmMastery = 1                  ; This is for farming Mastery from Study Hall
+$farmMastery = 0                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
 $coopMode = 1					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
 $avoidCompletedStories = 1        ; For avoiding stories already marked as Complete
