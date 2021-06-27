@@ -3,7 +3,6 @@
 ; Controls
 HotKeySet("{end}", "end")
 HotKeySet("{insert}", WriteColorCheck)
-;HotKeySet("{home}", PuriCircle)
 
 ; This is for Bluestacks v5
 ; 540x960 portrait resolution
@@ -34,7 +33,7 @@ $puriRefresh = 1                  ; Use purification to refresh
 $puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
-$puriRefreshLockoutPeriod = ((4*60)+0)* 60 * 1000		; Milliseconds until purification is ready
+$puriRefreshLockoutPeriod = ((1*60)+11)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 1500
 $writeColorCheckDelay = 500
@@ -547,7 +546,7 @@ While 1
 			Write("Start Story - Skip ticket visible")
 			Click(245, 767, 10)
 			OnStoryStart()
-			Sleep(3000)
+			Sleep(1000)
 			ContinueLoop
 		 EndIf
 
@@ -703,30 +702,6 @@ While 1
    EndIf
 
    If PixelCheck(220, 840, 0xD8CDC0, 10) AND PixelCheck(241, 838, 0x2F2716, 10) AND PixelCheck(268, 838, 0x8E331A, 10) Then
-	  If (PixelCheck(177, 370, 0xD5CDC1, 10) AND PixelCheck(164, 367, 0x060606, 10)) OR (PixelCheck(178, 401, 0xBBB5AA, 10) AND PixelCheck(177, 397, 0x0B0B0B, 10) AND PixelCheck(458, 542, 0x141311, 10) AND PixelCheck(455, 578, 0x0E0C0B, 10)) Then
-		 Write("Start purifying?")
-		 Click(324, 841, 10) ; OK
-		 Sleep(5000)
-		 PuriCircle()
-		 ContinueLoop
-	  EndIf
-
-	  If PixelCheck(447, 436, 0x161413, 10) AND PixelCheck(444, 403, 0x060606, 10) AND PixelCheck(444, 363, 0x141312, 10) AND PixelCheck(290, 771, 0x0E0401, 10) Then
-		 Write("Small text box")
-		 If PixelCheck(222, 402, 0x948E87, 10) Then
-			Write("Start purifying? 2")
-			Click(324, 841, 10) ; OK
-			Sleep(5000)
-			PuriCircle()
-			ContinueLoop
-		 EndIf
-
-		 Write("UNKNOWN SITUATION. Either need to puri or connection failed. Clicking cancel.")
-		 Click(163, 839, 10)
-		 ContinueLoop
-	  EndIf
-
-
 	  If PixelCheck(397, 401, 0x060606, 10) AND PixelCheck(407, 737, 0x0C0D0A, 10) AND PixelCheck(26, 776, 0x0A0A09, 10) AND PixelCheck(43, 99, 0x0B0807, 10) Then
 		 Write("You're part way through a story. Continue?")
 		 Click(163, 839, 10)
@@ -790,6 +765,18 @@ While 1
 		 If $puriRefresh Then
 			Click(235, 378, 10)
 			Sleep(1000)
+
+			If PixelCheck(217, 842, 0xD9C9C0, 10) AND PixelCheck(272, 840, 0x832D10, 10) Then
+			   Write("White Red button detected after puri")
+
+			   If PixelCheck(124, 394, 0x060606, 10) Then
+				  Write("Start purifying? Natural Puri Available")
+				  Click(324, 841, 10)
+				  Sleep(5000)
+				  PuriCircle()
+				  ContinueLoop
+			   EndIf
+			EndIf
 		 EndIf
 		 ContinueLoop
 	  EndIf
