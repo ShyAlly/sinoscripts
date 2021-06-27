@@ -22,7 +22,7 @@ HotKeySet("{insert}", WriteColorCheck)
 
 $maxRetry = 20000                 ; Maximum number of times to repeat a map
 $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
-$puriLockoutTimeHours = 8         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
+$puriLockoutTimeHours = 4         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
@@ -34,7 +34,7 @@ $puriRefresh = 1                  ; Use purification to refresh
 $puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
-$puriRefreshLockoutPeriod = ((0*60)+0)* 60 * 1000		; Milliseconds until purification is ready
+$puriRefreshLockoutPeriod = ((4*60)+0)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 1500
 $writeColorCheckDelay = 500
@@ -734,7 +734,7 @@ While 1
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(95, 455, 0xDFDC9C, 10) AND PixelCheck(156, 476, 0xE9D8D0, 10) AND PixelCheck(305, 488, 0xC3B7A9, 10) Then
+	  If (PixelCheck(454, 272, 0x060606, 10) OR PixelCheck(97, 420, 0xEEECBD, 10) AND PixelCheck(300, 458, 0xC1B8A9, 10)) OR (PixelCheck(95, 455, 0xDFDC9C, 10) AND PixelCheck(156, 476, 0xE9D8D0, 10) AND PixelCheck(305, 488, 0xC3B7A9, 10)) Then
 		 Write("Use a purification ticket to play?")
 		 If $puriTicketRefresh Then
 			Click(324, 841, 10) ; OK
