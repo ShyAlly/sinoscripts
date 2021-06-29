@@ -1,5 +1,5 @@
 # sinoscripts
-Some useful scripts for SINoALICE
+Some useful scripts for sino
 
 AutoIt v3.3.14.5
 https://www.autoitscript.com/site/autoit/downloads/

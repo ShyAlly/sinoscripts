@@ -25,17 +25,17 @@ $puriLockoutTimeHours = 4         ; The number of hours to lock puri. 4 for RUS,
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
-$coopMode = 1					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
-$avoidCompletedStories = 1        ; For avoiding stories already marked as Complete
+$coopMode = 2					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
+$avoidCompletedStories = 0        ; For avoiding stories already marked as Complete
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
 $puriRefresh = 1                  ; Use purification to refresh
-$puriTicketRefresh = 0            ; Use Puri Tickets to refresh
+$puriTicketRefresh = 1            ; Use Puri Tickets to refresh
 
 ; More internalish things
-$puriRefreshLockoutPeriod = ((1*60)+11)* 60 * 1000		; Milliseconds until purification is ready
+$puriRefreshLockoutPeriod = ((3*60)+5)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
-$maxBattleTimeout = 1500
+$maxBattleTimeout = 900
 $writeColorCheckDelay = 500
 $returnToHome = 0
 
@@ -61,7 +61,10 @@ Func AdjustSettings($outOfAp)
 EndFunc
 
 Func IsCoopBattleGood()
-   Return True
+   If PixelCheck(75, 329, 0x746F67, 10) AND PixelCheck(76, 323, 0xFFF4E1, 10) Then
+	  Return True
+   EndIf
+   Return False
 EndFunc
 
 ; Super internaly things
@@ -158,7 +161,7 @@ Func IsPuriSkillActive()
 
    $_IsPuriSkillActive_Response = 0
 
-   If (PixelCheck(197, 528, 0xFF8E2A, 45) OR PixelCheck(193, 530, 0xF3934B, 37) OR PixelCheck(190, 529, 0xFF8C30, 30) OR PixelCheck(192, 529, 0xFF8834, 34)) AND (PixelCheck(298, 529, 0xFD7F2A, 25) OR PixelCheck(304, 529, 0xF98C41, 30) OR PixelCheck(301, 528, 0xFA933F, 21) OR PixelCheck(298, 528, 0xFE8D37, 24)) Then
+   If (PixelCheck(197, 528, 0xFF8E2A, 55) OR PixelCheck(193, 530, 0xF3934B, 37) OR PixelCheck(190, 529, 0xFF8C30, 30) OR PixelCheck(192, 529, 0xFF8834, 34)) AND (PixelCheck(298, 529, 0xFD7F2A, 45) OR PixelCheck(304, 529, 0xF98C41, 30) OR PixelCheck(301, 528, 0xFA933F, 21) OR PixelCheck(298, 528, 0xFE8D37, 24)) Then
 	  $_IsPuriSkillActive_Response = 1
    EndIf
 
@@ -170,7 +173,7 @@ $_IsPuriExitButton_Response = 0
 $_IsPuriExitButton_Time = 0
 Func IsPuriExitButton()
    Local $nowTime = GetElapsedTime()
-   If $nowTime - $_IsPuriExitButton_Time < 1000 Then
+   If $nowTime - $_IsPuriExitButton_Time < 2500 Then
 	  Return $_IsPuriExitButton_Response
    EndIf
 
@@ -250,7 +253,7 @@ Func PuriCircle()
 
 			Write("Special skill")
 
-			Local $minimumClicks = 10
+			Local $minimumClicks = 5
 			While $minimumClicks > 0
 			   If Not IsPuriSkillActive() Then
 				  $minimumClicks = $minimumClicks - 1
@@ -517,7 +520,7 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If (PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10)) OR (PixelCheck(304, 824, 0x91785D, 10) AND PixelCheck(386, 824, 0x92795E, 10) AND PixelCheck(476, 885, 0x2A221A, 10)) OR (PixelCheck(321, 794, 0x3F3626, 10) AND PixelCheck(354, 771, 0x9E7E56, 10) AND PixelCheck(446, 804, 0x736342, 10)) Then
+   If (PixelCheck(304, 868, 0x332920, 13) AND PixelCheck(365, 863, 0x352D25, 10) AND PixelCheck(389, 824, 0x92795C, 10) AND PixelCheck(473, 860, 0x726147, 10)) OR (PixelCheck(310, 825, 0x8B7858, 10) AND PixelCheck(310, 852, 0xD4CCB3, 10) AND PixelCheck(466, 860, 0x756249, 10)) OR (PixelCheck(304, 824, 0x91785D, 10) AND PixelCheck(386, 824, 0x92795E, 10) AND PixelCheck(476, 885, 0x2A221A, 10)) OR (PixelCheck(321, 794, 0x3F3626, 10) AND PixelCheck(354, 771, 0x9E7E56, 10) AND PixelCheck(446, 804, 0x736342, 10)) Then
 	  If PixelCheck(34, 824, 0xE1D190, 10) Then
 		 Write("At Home")
 		 $returnToHome = 0
@@ -730,6 +733,13 @@ While 1
 
 		 Write("Waiting 60s to retry")
 		 Sleep(60000)
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(127, 391, 0x948F87, 30) AND PixelCheck(313, 391, 0xA6A197, 30) AND PixelCheck(205, 412, 0xA7A198, 30) Then
+		 Write("Connection to server failed. Try again?")
+		 Click(163, 839, 10)
+		 Sleep(1000)
 		 ContinueLoop
 	  EndIf
 
