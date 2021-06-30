@@ -38,6 +38,7 @@ $maxTimeout = 150
 $maxBattleTimeout = 900
 $writeColorCheckDelay = 500
 $returnToHome = 0
+$clickCancelOnConnectionFailure = 0
 
 $globalOffsetX = 10
 $globalOffsetY = 10
@@ -145,6 +146,7 @@ EndFunc
 
 Func OnBattleTick()
 	$timeout = 0
+	$clickCancelOnConnectionFailure = 0
 EndFunc
 
 ; -------------------------------------------------------------------------------
@@ -403,8 +405,111 @@ Func ClaimPresentBox()
    WEnd
 EndFunc
 
+Func GetShootingGalleryShot()
+
+   If PixelCheck(63, 266, 0xEDE2B0, 10) Then
+	  Write("Puri Ticket slot 1")
+	  Return 5
+   EndIf
+   If PixelCheck(160, 266, 0xE6E0AB, 10) Then
+	  Write("Puri Ticket slot 2")
+	  Return 1
+   EndIf
+   If PixelCheck(258, 265, 0xEDE6B6, 10) Then
+	  Write("Puri Ticket slot 3")
+	  Return 1
+   EndIf
+   If PixelCheck(355, 265, 0xEBE7B7, 10) Then
+	  Write("Puri Ticket slot 4")
+	  Return 1
+   EndIf
+   If PixelCheck(454, 265, 0xECE7B7, 10) Then
+	  Write("Puri Ticket slot 5")
+	  Return 1
+   EndIf
+   If PixelCheck(453, 164, 0xECEABA, 10) Then
+	  Write("Puri Ticket slot 6")
+	  Return 1
+   EndIf
+
+   If PixelCheck(17, 292, 0x834935, 10) OR PixelCheck(74, 290, 0x8A5038, 10) Then
+	  Write("Bronze")
+	  Return 1
+   EndIf
+   If PixelCheck(19, 290, 0xA49D98, 10) OR PixelCheck(73, 291, 0x908887, 10) Then
+	  If PixelCheck(37, 246, 0x9A4447, 10) AND PixelCheck(69, 256, 0xFAE8A0, 10) Then
+		 Write("Silver Mask")
+		 Return 1
+	  EndIf
+	  If PixelCheck(28, 232, 0xD5ADC3, 10) AND PixelCheck(70, 268, 0xF5F2F3, 10) Then
+		 Write("Silver Feather")
+		 Return 1
+	  EndIf
+
+	  Write("Silver")
+	  Return 5
+   EndIf
+   If PixelCheck(17, 291, 0xAA893D, 10) OR PixelCheck(76, 289, 0xA78A3C, 10) Then
+	  Write("Gold")
+	  Return 5
+   EndIf
+
+   Return 0
+EndFunc
+
 Func ShootingGallery()
-   Write("TBD")
+   If Not PixelCheck(431, 766, 0x8C380F, 10) Then
+	  Write("Disabling Motions")
+	  Click(433, 762, 10)
+	  Sleep(2000)
+   EndIf
+
+   While 1
+	  Sleep(100)
+
+	  If PixelCheck(201, 651, 0x8E3B22, 10) AND PixelCheck(287, 643, 0xAB502F, 10) Then
+		 Local $shoot = GetShootingGalleryShot()
+		 If $shoot = 1 Then
+			Click(134, 651, 10)
+		 ElseIf $shoot = 5 Then
+			Click(365, 652, 10)
+		 Else
+			Write("Unknown target")
+		 EndIf
+
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(209, 844, 0xDCCBBF, 10) AND PixelCheck(365, 837, 0x8D341A, 10) Then
+
+		 If PixelCheck(56, 765, 0x090706, 10) AND PixelCheck(227, 769, 0x090504, 10) Then
+			Write("Use tickets?")
+			Click(321, 841, 10)
+
+			Sleep(500)
+
+			Local $timeStart = GetElapsedTime()
+			While (GetElapsedTime() - $timeStart < 10000) AND Not PixelCheck(209, 843, 0xDECEBD, 10)
+
+			WEnd
+			If PixelCheck(209, 843, 0xDECEBD, 10) Then
+			   Click(169, 847, 10)
+			Else
+			   Write("Timed out fast close")
+			EndIf
+
+			ContinueLoop
+		 EndIf
+		 If PixelCheck(430, 661, 0xD7C7BE, 10) Then
+			Write("Result")
+			Click(159, 846, 10)
+			ContinueLoop
+		 EndIf
+
+		 Write("White Red")
+		 ContinueLoop
+	  EndIf
+   WEnd
 EndFunc
 
 If PixelCheck(382, 823, 0xE5D498, 10) AND PixelCheck(408, 836, 0x836A49, 10) AND PixelCheck(339, 845, 0x403727, 10) AND PixelCheck(182, 122, 0x151515, 10) Then
@@ -705,8 +810,17 @@ While 1
    EndIf
 
    If PixelCheck(220, 840, 0xD8CDC0, 10) AND PixelCheck(241, 838, 0x2F2716, 10) AND PixelCheck(268, 838, 0x8E331A, 10) Then
+
 	  If PixelCheck(397, 401, 0x060606, 10) AND PixelCheck(407, 737, 0x0C0D0A, 10) AND PixelCheck(26, 776, 0x0A0A09, 10) AND PixelCheck(43, 99, 0x0B0807, 10) Then
 		 Write("You're part way through a story. Continue?")
+		 If $clickCancelOnConnectionFailure Then
+			Click(163, 839, 10)
+			$clickCancelOnConnectionFailure = 0
+		 Else
+			Click(324, 841, 10)
+			$clickCancelOnConnectionFailure = 1
+		 EndIf
+
 		 Click(163, 839, 10)
 		 Sleep(1000)
 		 ContinueLoop
@@ -736,9 +850,17 @@ While 1
 		 ContinueLoop
 	  EndIf
 
-	  If PixelCheck(127, 391, 0x948F87, 30) AND PixelCheck(313, 391, 0xA6A197, 30) AND PixelCheck(205, 412, 0xA7A198, 30) Then
+	  If (PixelCheck(125, 730, 0x342D1A, 10)) OR (PixelCheck(70, 704, 0x251B14, 11) AND PixelCheck(130, 734, 0x211B02, 10)) OR (PixelCheck(127, 391, 0x948F87, 30) AND PixelCheck(313, 391, 0xA6A197, 30) AND PixelCheck(205, 412, 0xA7A198, 30)) Then
 		 Write("Connection to server failed. Try again?")
-		 Click(163, 839, 10)
+
+		 If $clickCancelOnConnectionFailure Then
+			Click(163, 839, 10)
+			$clickCancelOnConnectionFailure = 0
+		 Else
+			Click(324, 841, 10)
+			$clickCancelOnConnectionFailure = 1
+		 EndIf
+
 		 Sleep(1000)
 		 ContinueLoop
 	  EndIf
