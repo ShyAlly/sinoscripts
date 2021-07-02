@@ -190,6 +190,11 @@ Func IsPuriExitButton()
 	  $_IsPuriExitButton_Response = 1
    EndIf
 
+   ; Another OK button from network instability
+   If PixelCheck(157, 838, 0x2D2516, 10) AND PixelCheck(182, 839, 0x8B3016, 10) Then
+	  $_IsPuriExitButton_Response = 1
+   EndIf
+
    $_IsPuriExitButton_Time = $nowTime
    Return $_IsPuriExitButton_Response
 EndFunc
@@ -862,6 +867,12 @@ While 1
 		 EndIf
 
 		 Sleep(1000)
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(452, 391, 0x060606, 10) AND PixelCheck(457, 610, 0x131212, 12) AND PixelCheck(187, 652, 0x121111, 11) Then
+		 Write("Connection to server failed on home screen")
+		 Click(157, 845, 10)
 		 ContinueLoop
 	  EndIf
 
