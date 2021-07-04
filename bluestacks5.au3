@@ -65,6 +65,9 @@ Func IsCoopBattleGood()
    If PixelCheck(75, 329, 0x746F67, 10) AND PixelCheck(76, 323, 0xFFF4E1, 10) Then
 	  Return True
    EndIf
+   If PixelCheck(76, 322, 0xFFF2DF, 10) AND PixelCheck(75, 331, 0x373737, 10) Then
+	  Return True
+   EndIf
    Return False
 EndFunc
 
@@ -195,6 +198,12 @@ Func IsPuriExitButton()
 	  $_IsPuriExitButton_Response = 1
    EndIf
 
+   If PixelCheck(210, 839, 0xDACDC0, 10) AND PixelCheck(267, 839, 0x8C3116, 10) Then
+	  ; Cancel Ok button from Connection to server failed
+	  $_IsPuriExitButton_Response = 1
+	  Click(323, 839, 10)
+   EndIf
+
    $_IsPuriExitButton_Time = $nowTime
    Return $_IsPuriExitButton_Response
 EndFunc
@@ -203,6 +212,10 @@ Func PuriCircle()
    Local $var = 5
 
    $puriRefreshLockoutPeriod = GetElapsedTime() + ($puriLockoutTimeHours * 60 * 60 * 1000)
+
+   ; Literally impossible to be faster than this
+   $_IsPuriExitButton_Response = 0
+   $_IsPuriExitButton_Time = GetElapsedTime() + 50000
 
    ; The dead center locations of each puri victim
    Local $realPositions[16] = [374, 473, 383, 591, 352, 729, 228, 716, 110, 646, 93,  510, 160, 393, 287, 378]
@@ -343,6 +356,8 @@ Func Init()
 
    ; Note, window actually becomes 488,899 and I give up on figuring out what to do
    ; Main this is consistency and it seems to be consistent
+   $globalOffsetX = WinGetPos($windowHandle)[0]
+   $globalOffsetY = WinGetPos($windowHandle)[1]
    WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
    Sleep(50)
    WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
