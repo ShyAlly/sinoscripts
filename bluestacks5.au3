@@ -35,7 +35,7 @@ $puriTicketRefresh = 1            ; Use Puri Tickets to refresh
 ; More internalish things
 $puriRefreshLockoutPeriod = ((3*60)+5)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
-$maxBattleTimeout = 900
+$maxBattleTimeout = 600
 $minimumPurificationTime = 5 * 60 * 1000
 $writeColorCheckDelay = 500
 $returnToHome = 0
@@ -536,9 +536,6 @@ Func ShootingGallery()
 EndFunc
 
 Func HardReset()
-   $timeout = 0
-   $battleTimeout = 0
-
    Write("Attempting hard reset")
    Sleep(1000)
    MouseMove(270 + $globalOffsetX, 18 + $globalOffsetY)
@@ -550,7 +547,9 @@ Func HardReset()
    Click(419, 108, 10)
    Sleep(5000)
    Click(96, 222, 10)
-   Sleep(5000)
+   Sleep(10000)
+
+   $timeout = $maxTimeout - 10
 EndFunc
 
 If PixelCheck(382, 823, 0xE5D498, 10) AND PixelCheck(408, 836, 0x836A49, 10) AND PixelCheck(339, 845, 0x403727, 10) AND PixelCheck(182, 122, 0x151515, 10) Then
@@ -999,6 +998,8 @@ While 1
 
    If PixelCheck(417, 828, 0xFFFFFF, 10) AND PixelCheck(436, 828, 0x000000, 10) AND PixelCheck(55, 120, 0xE1D2C1, 30) Then
 	  Write("Tap to Start")
+	  $timeout = 0
+	  $battleTimeout = 0
 	  Click(256, 824, 14)
 	  Sleep(5000)
 	  ContinueLoop
