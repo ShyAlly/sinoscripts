@@ -36,9 +36,11 @@ $puriTicketRefresh = 1            ; Use Puri Tickets to refresh
 $puriRefreshLockoutPeriod = ((3*60)+5)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 900
+$minimumPurificationTime = 5 * 60 * 1000
 $writeColorCheckDelay = 500
 $returnToHome = 0
 $clickCancelOnConnectionFailure = 0
+$lastPurificationTime = -99999999
 
 $globalOffsetX = 10
 $globalOffsetY = 10
@@ -212,6 +214,7 @@ Func PuriCircle()
    Local $var = 5
 
    $puriRefreshLockoutPeriod = GetElapsedTime() + ($puriLockoutTimeHours * 60 * 60 * 1000)
+   $lastPurificationTime = GetElapsedTime()
 
    ; Literally impossible to be faster than this
    $_IsPuriExitButton_Response = 0
@@ -870,6 +873,12 @@ While 1
 	  If (PixelCheck(454, 272, 0x060606, 10) OR PixelCheck(97, 420, 0xEEECBD, 10) AND PixelCheck(300, 458, 0xC1B8A9, 10)) OR (PixelCheck(95, 455, 0xDFDC9C, 10) AND PixelCheck(156, 476, 0xE9D8D0, 10) AND PixelCheck(305, 488, 0xC3B7A9, 10)) Then
 		 Write("Use a purification ticket to play?")
 		 If $puriTicketRefresh Then
+			If GetElapsedTime() - $lastPurificationTime < $minimumPurificationTime Then
+			   Write("Purification failsafe - is it not working?")
+			   While 1
+				  AlertProblem()
+			   WEnd
+			EndIf
 			Click(324, 841, 10) ; OK
 			Sleep(5000)
 			PuriCircle()
