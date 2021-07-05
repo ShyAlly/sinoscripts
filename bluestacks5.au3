@@ -2,8 +2,7 @@
 
 ; Controls
 HotKeySet("{end}", "end")
-;HotKeySet("{insert}", WriteColorCheck)
-HotKeySet("{insert}", HardReset)
+HotKeySet("{insert}", WriteColorCheck)
 
 ; This is for Bluestacks v5
 ; 540x960 portrait resolution
@@ -534,6 +533,9 @@ Func ShootingGallery()
 EndFunc
 
 Func HardReset()
+   $timeout = 0
+   $battleTimeout = 0
+
    Write("Attempting hard reset")
    Sleep(1000)
    MouseMove(270 + $globalOffsetX, 18 + $globalOffsetY)
@@ -545,6 +547,7 @@ Func HardReset()
    Click(419, 108, 10)
    Sleep(5000)
    Click(96, 222, 10)
+   Sleep(5000)
 EndFunc
 
 If PixelCheck(382, 823, 0xE5D498, 10) AND PixelCheck(408, 836, 0x836A49, 10) AND PixelCheck(339, 845, 0x403727, 10) AND PixelCheck(182, 122, 0x151515, 10) Then
@@ -578,6 +581,7 @@ While 1
    If $timeout > $maxTimeout Then
 	 Write("Timeout has been reached. Something's wrong.")
 	 AlertProblem()
+	 HardReset()
 	 ContinueLoop
    EndIf
 
@@ -590,6 +594,8 @@ While 1
 	  If $battleTimeout > $maxBattleTimeout Then
 		 Write("Battle is taking a long time")
 		 AlertProblem()
+		 HardReset()
+		 ContinueLoop
 	  EndIf
 
 	  If PixelCheck(355, 885, 0x4F2E1E, 10) Then
