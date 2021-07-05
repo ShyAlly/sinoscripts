@@ -2,7 +2,8 @@
 
 ; Controls
 HotKeySet("{end}", "end")
-HotKeySet("{insert}", WriteColorCheck)
+;HotKeySet("{insert}", WriteColorCheck)
+HotKeySet("{insert}", HardReset)
 
 ; This is for Bluestacks v5
 ; 540x960 portrait resolution
@@ -530,6 +531,20 @@ Func ShootingGallery()
 		 ContinueLoop
 	  EndIf
    WEnd
+EndFunc
+
+Func HardReset()
+   Write("Attempting hard reset")
+   Sleep(1000)
+   MouseMove(270 + $globalOffsetX, 18 + $globalOffsetY)
+   Sleep(10)
+   MouseDown("left")
+   Sleep(50)
+   MouseUp("left")
+   Sleep(5000)
+   Click(419, 108, 10)
+   Sleep(5000)
+   Click(96, 222, 10)
 EndFunc
 
 If PixelCheck(382, 823, 0xE5D498, 10) AND PixelCheck(408, 836, 0x836A49, 10) AND PixelCheck(339, 845, 0x403727, 10) AND PixelCheck(182, 122, 0x151515, 10) Then
