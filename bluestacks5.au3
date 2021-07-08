@@ -30,10 +30,10 @@ $avoidCompletedStories = 0        ; For avoiding stories already marked as Compl
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
 $puriRefresh = 1                  ; Use purification to refresh
-$puriTicketRefresh = 1            ; Use Puri Tickets to refresh
+$puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
-$puriRefreshLockoutPeriod = ((3*60)+5)* 60 * 1000		; Milliseconds until purification is ready
+$puriRefreshLockoutPeriod = ((0*60)+0)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 600
 $minimumPurificationTime = 5 * 60 * 1000
@@ -44,6 +44,7 @@ $lastPurificationTime = -99999999
 
 $globalOffsetX = 10
 $globalOffsetY = 10
+$multipleWindowMode = 0
 
 $timeout = 0
 $battleTimeout = 0
@@ -51,6 +52,10 @@ $battleTimeout = 0
 ; Functions that change frequently
 
 Func AdjustSettings($outOfAp)
+   If @HOUR = 1 AND @MIN >= 50 Then
+	  Write("Maintenance.")
+	  Exit
+   EndIf
    If $outOfAp AND Not $farmMastery AND $puriRefreshLockoutPeriod > GetElapsedTime() Then
 	  $farmMastery = 1
 	  $returnToHome = 1
@@ -359,8 +364,11 @@ Func Init()
 
    ; Note, window actually becomes 488,899 and I give up on figuring out what to do
    ; Main this is consistency and it seems to be consistent
-   $globalOffsetX = WinGetPos($windowHandle)[0]
-   $globalOffsetY = WinGetPos($windowHandle)[1]
+   If $multipleWindowMode Then
+	  $globalOffsetX = WinGetPos($windowHandle)[0]
+	  $globalOffsetY = WinGetPos($windowHandle)[1]
+   EndIf
+
    WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
    Sleep(50)
    WinMove($windowHandle, "", $globalOffsetX, $globalOffsetY, 489, 899)
@@ -535,6 +543,48 @@ Func ShootingGallery()
    WEnd
 EndFunc
 
+Func BloodGacha()
+   While 1
+	  If PixelCheck(193, 704, 0xD8C9C0, 10) AND PixelCheck(190, 843, 0x872C13, 10) Then
+		 Write("Claim Return")
+		 AlertProblem()
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(167, 648, 0x983F26, 10) AND PixelCheck(215, 662, 0x20170F, 10) Then
+		 Write("Summon")
+		 Click(245, 655, 10)
+		 Sleep(100)
+		 ContinueLoop
+	  EndIf
+	  If PixelCheck(208, 842, 0xDECEC5, 10) AND PixelCheck(371, 839, 0x903517, 10) Then
+		 If PixelCheck(163, 646, 0x0F0604, 10) Then
+			Write("Use 5 blood?")
+			Click(321, 838, 10)
+			ContinueLoop
+		 EndIf
+
+		 Write("White Red")
+		 ContinueLoop
+	  EndIf
+	  If PixelCheck(366, 84, 0x60513F, 10) AND PixelCheck(441, 85, 0x5A5239, 10) Then
+		 Write("Skip")
+		 Click(413, 87, 10)
+		 Sleep(100)
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(185, 846, 0xDACAB9, 10) Then
+		 Write("Close")
+		 Click(246, 845, 10)
+		 Sleep(100)
+		 ContinueLoop
+	  EndIf
+
+	  Sleep(100)
+   WEnd
+EndFunc
+
 Func HardReset()
    Write("Attempting hard reset")
    Sleep(1000)
@@ -562,6 +612,13 @@ EndIf
 If PixelCheck(55, 764, 0x5E4E3D, 10) AND PixelCheck(187, 642, 0xAC512E, 10) AND PixelCheck(431, 774, 0x7B766C, 10) Then
    Write("Shooting Gallery Mode")
    ShootingGallery()
+   Write("Done")
+   Exit
+EndIf
+
+If PixelCheck(176, 640, 0xB25731, 10) AND PixelCheck(229, 663, 0x1F160E, 10) AND PixelCheck(56, 765, 0x5E4D3D, 10) Then
+   Write("Guild Box o' Grimoire Mode")
+   BloodGacha()
    Write("Done")
    Exit
 EndIf

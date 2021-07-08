@@ -26,7 +26,7 @@ $maxTimeout = 150
 $maxBattleTimeout = 1500
 $writeColorCheckDelay = 20
 
-$globalOffsetX = 10
+$globalOffsetX = 500
 $globalOffsetY = 10
 
 $timeout = 0
@@ -301,11 +301,11 @@ While 1
 	  ContinueLoop
    EndIf
 
-   If PixelCheck(328, 796, 0x2B3B23, 10) Then
+   If PixelCheck(159, 782, 0x1D2919, 10) OR PixelCheck(328, 796, 0x2B3B23, 10) Then
 	  If Not PixelCheck(442, 701, 0x392C1F, 10) Then
-	  Write("Revive")
-	  Click(438, 711, 10)
-	  ContinueLoop
+		 Write("Revive")
+		 Click(438, 711, 10)
+		 ContinueLoop
 	  EndIf
    EndIf
 
