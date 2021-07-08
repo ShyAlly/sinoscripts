@@ -13,7 +13,7 @@ For the sake of this guide and for your sanity please make sure you downloaded a
 
 Please make sure you have installed AutoIt3 and are running the game on BlueStacks 5 emulator.
 
-#Instructions
+# Instructions
 
 Instead of actually clicking the script files you want to open up the script editor that came with AutoIt3. Run the program "SciTE Script Editor".
 
@@ -25,7 +25,7 @@ To execute the script press F5, to abort the script press end (as in the actual 
 
 If the script is properly executed a log screen will pop up indicating the time the script was executed and request you to target a bluestacks screen. Click anywhere on the BlueStacks window and the script shall then actually run.
 
-#FAQ
+# FAQ
 
 1. I'm clicking the bluestacks windows and nothing is happening.
 	
