@@ -316,6 +316,12 @@ While 1
 	  ContinueLoop
    EndIf
 
+   If PixelCheck(219, 841, 0xD6CEBE, 10) AND PixelCheck(265, 842, 0x8B2910, 10) Then
+	  Write("Cancel OK")
+	  Click(321, 838, 10)
+	  ContinueLoop
+   EndIf
+
    Write("Unknown situation")
    Click(62, 790, 10)
    Sleep(100)

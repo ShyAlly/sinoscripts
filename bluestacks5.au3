@@ -25,7 +25,7 @@ $puriLockoutTimeHours = 4         ; The number of hours to lock puri. 4 for RUS,
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
 $clearStoryMode = 0               ; For clearing new content with a Next button
-$coopMode = 2					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
+$coopMode = 0					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
 $avoidCompletedStories = 0        ; For avoiding stories already marked as Complete
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
@@ -33,7 +33,7 @@ $puriRefresh = 1                  ; Use purification to refresh
 $puriTicketRefresh = 0            ; Use Puri Tickets to refresh
 
 ; More internalish things
-$puriRefreshLockoutPeriod = ((0*60)+0)* 60 * 1000		; Milliseconds until purification is ready
+$puriRefreshLockoutPeriod = 0;((3*60)+38)* 60 * 1000		; Milliseconds until purification is ready
 $maxTimeout = 150
 $maxBattleTimeout = 600
 $minimumPurificationTime = 5 * 60 * 1000
@@ -52,16 +52,18 @@ $battleTimeout = 0
 ; Functions that change frequently
 
 Func AdjustSettings($outOfAp)
+   ; Automatically exit for maintenance
    If @HOUR = 1 AND @MIN >= 50 Then
-	  Write("Maintenance.")
-	  Exit
+	  ;Write("Maintenance.")
+	  ;Exit
    EndIf
+
+   ; Automatically farm mastery if you have nothing better to do
    If $outOfAp AND Not $farmMastery AND $puriRefreshLockoutPeriod > GetElapsedTime() Then
 	  $farmMastery = 1
 	  $returnToHome = 1
 	  Return
    EndIf
-
    If $farmMastery AND $puriRefreshLockoutPeriod > 0 AND $puriRefreshLockoutPeriod < GetElapsedTime() Then
 	  $farmMastery = 0
 	  $returnToHome = 1
@@ -69,13 +71,7 @@ Func AdjustSettings($outOfAp)
 EndFunc
 
 Func IsCoopBattleGood()
-   If PixelCheck(75, 329, 0x746F67, 10) AND PixelCheck(76, 323, 0xFFF4E1, 10) Then
-	  Return True
-   EndIf
-   If PixelCheck(76, 322, 0xFFF2DF, 10) AND PixelCheck(75, 331, 0x373737, 10) Then
-	  Return True
-   EndIf
-   Return False
+   Return 1
 EndFunc
 
 ; Super internaly things
@@ -869,15 +865,15 @@ While 1
 			Local $y = 700
 
 			MoveMouse(470, $y, 10)
-			Sleep(50)
+			Sleep(10)
 
 			HoldMouse(True)
-			Sleep(50)
+			Sleep(10)
 
 			While $y > 230
-			   MoveMouse(470, $y, 10)
+			   MoveMouse(470, $y, 5)
 			   $y = $y - 10
-			   Sleep(50)
+			   Sleep(10)
 			WEnd
 			HoldMouse(False)
 
