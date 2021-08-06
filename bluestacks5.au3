@@ -24,7 +24,7 @@ $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 $puriLockoutTimeHours = 4         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
-$clearStoryMode = 0               ; For clearing new content with a Next button
+$clearStoryMode = 1               ; For clearing new content with a Next button
 $coopMode = 0					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
 $avoidCompletedStories = 0        ; For avoiding stories already marked as Complete
 
@@ -703,7 +703,7 @@ While 1
 			ContinueLoop
 		 EndIf
 
-		 If PixelCheck(72, 845, 0x5C524B, 10) Then
+		 If PixelCheck(72, 845, 0x5C524B, 10) OR PixelCheck(71, 844, 0x524943, 10) Then
 			Write("Next Button Detected")
 			If $clearStoryMode Then
 			   Click(86, 845, 10)
