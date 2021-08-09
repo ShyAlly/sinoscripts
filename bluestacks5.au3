@@ -24,9 +24,10 @@ $maxScriptTime = 3000 * 60 * 1000 ; Maximum time to macro, in milliseconds
 $puriLockoutTimeHours = 4         ; The number of hours to lock puri. 4 for RUS, 8 otherwise
 
 $farmMastery = 0                  ; This is for farming Mastery from Study Hall
-$clearStoryMode = 1               ; For clearing new content with a Next button
+$clearStoryMode = 0               ; For clearing new content with a Next button
 $coopMode = 0					  ; For clearing things in coop. 1 = random, 2 = friends, 3 = guild members
 $avoidCompletedStories = 0        ; For avoiding stories already marked as Complete
+$farmEvent = 1                    ; For farming an event. Make sure to adjust event triggers.
 
 $crystalRefresh = 0               ; Use twilight crystals to refresh
 $puriRefresh = 1                  ; Use purification to refresh
@@ -68,6 +69,17 @@ Func AdjustSettings($outOfAp)
 	  $farmMastery = 0
 	  $returnToHome = 1
    EndIf
+EndFunc
+
+Func GetEventPosition()
+   If PixelCheck(93, 239, 0xE1B893, 10) AND PixelCheck(366, 303, 0xC2E0EB, 10) Then
+	  Return 1
+   EndIf
+   If PixelCheck(93, 425, 0xE1B892, 10) AND PixelCheck(368, 487, 0xCBE7F0, 10) Then
+	  Return 2
+   EndIf
+
+   Return 0
 EndFunc
 
 Func IsCoopBattleGood()
@@ -768,6 +780,13 @@ While 1
 			ContinueLoop
 		 EndIf
 
+		 If $farmEvent Then
+			Write("Clicking Event to farm event")
+			Click(373, 440, 10)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+
 		 If $coopMode Then
 			Write("Clicking Co-Op Battle")
 			Click(116, 445, 10)
@@ -855,7 +874,7 @@ While 1
 		 If $farmMastery Then
 			If PixelCheck(255, 497, 0x294528, 10) AND PixelCheck(389, 531, 0xFBF5EC, 10) AND PixelCheck(427, 625, 0x6A6352, 10) Then
 			   Write("Study Hall found - clicking")
-			   Click(246, 545, 10)
+			   Click(246 545, 10)
 			   Sleep(1000)
 			   ContinueLoop
 			EndIf
@@ -880,6 +899,26 @@ While 1
 			Sleep(2000)
 			ContinueLoop
 		 EndIf
+
+		 If $farmEvent Then
+			Local $clickOn = GetEventPosition()
+
+			If $clickOn = 1 Then
+			   Click(266, 272, 10)
+			ElseIf $clickOn = 2 Then
+			   Click(243, 455, 10)
+			ElseIf $clickOn = 3 Then
+			   Click(264, 637, 10)
+			Else
+			   Write("Unknown event situation")
+			   ContinueLoop
+			EndIf
+
+			Write("Clicking event")
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+
 		 ContinueLoop
 	  EndIf
 
@@ -898,6 +937,18 @@ While 1
 
 		 Write("Last Stage CLEAR - what am I supposed to do? Returning to home")
 		 $returnToHome = 1
+		 ContinueLoop
+	  EndIf
+
+	  If PixelCheck(390, 711, 0x611F06, 10) AND PixelCheck(426, 706, 0x5B1904, 10) AND PixelCheck(441, 680, 0xDACCB9, 10) Then
+		 If $farmEvent Then
+			Write("Clicking last Verse")
+			Click(249, 682, 10)
+			Sleep(1000)
+			ContinueLoop
+		 EndIf
+
+		 Write("Last Verse Complete")
 		 ContinueLoop
 	  EndIf
 
